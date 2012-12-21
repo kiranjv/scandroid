@@ -1,0 +1,5 @@
+bin/
+.svn/
+gen/com/safecell/
+thumbs.db
+R.java

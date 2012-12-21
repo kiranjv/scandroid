@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:background="@drawable/background"  
+  android:orientation ="vertical"
+  android:padding="10dip"
+  >  
+  <TextView android:layout_width="wrap_content"
+  			android:layout_height="wrap_content"
+  			android:text = "Login Information"
+  			android:textColor="#000"
+  			android:textSize="20sp"
+  			></TextView>
+
+  <LinearLayout
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:background="@android:drawable/editbox_background"
+      android:orientation="vertical"
+      android:padding="10dip" >
+
+      <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" >
+
+          <TextView
+              android:id="@+id/TextView01"
+              android:layout_width="100dip"
+              android:layout_height="wrap_content"
+              android:text="Username"
+              android:textColor="#000" />
+
+          <EditText
+              android:id="@+id/LoginUserNameEditText"
+              android:layout_width="150dip"
+              android:layout_height="wrap_content"
+              android:imeOptions="actionNext" >
+
+              <requestFocus />
+          </EditText>
+      </LinearLayout>
+
+      <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content" >
+
+          <TextView
+              android:layout_width="100dip"
+              android:layout_height="wrap_content"
+              android:text="Password"
+              android:textColor="#000" />
+
+          <EditText
+              android:id="@+id/LoginPasswordEditText"
+              android:layout_width="150dip"
+              android:layout_height="wrap_content"
+              android:imeOptions="actionDone"
+              android:inputType="textPassword" />
+      </LinearLayout>
+
+      <Button
+          android:id="@+id/LoginRetriveProfileButton"
+          android:layout_width="200dip"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center_horizontal"
+          android:text="Retrieve Profiles " />
+  </LinearLayout>
+
+</LinearLayout>
