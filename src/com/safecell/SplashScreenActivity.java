@@ -169,7 +169,7 @@ public class SplashScreenActivity extends Activity implements Runnable,
 		} else {
 			linearLayout.setVisibility(View.INVISIBLE);
 			//NetWork_Information.noNetworkConnectiondialog(context);
-			Toast.makeText(context, "Network connection unavailable.", Toast.LENGTH_LONG).show();
+			Toast.makeText(context, "Network connection unavailable. Please check the connection.", Toast.LENGTH_LONG).show();
 			this.finish();
 		}
 		// getAcccountInformation();
