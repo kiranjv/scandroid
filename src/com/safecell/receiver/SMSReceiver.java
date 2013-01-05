@@ -93,7 +93,7 @@ public class SMSReceiver extends BroadcastReceiver {
 					timeMillisecond = msgs[i].getTimestampMillis();
 
 					// make sms audible
-					if (SpeechService.synthesis != null) {// if
+					/*if (SpeechService.synthesis != null) {// if
 															// (TrackingScreenActivity.synthesis
 															// != null) {
 						String headder_message = "You have one incoming message. Message is. ";
@@ -119,7 +119,7 @@ public class SMSReceiver extends BroadcastReceiver {
 							e.printStackTrace();
 						}
 						SpeechService.synthesis.stop();
-					}
+					}*/
 
 					scSms.setAddress(msgs[i].getOriginatingAddress());
 					scSms.setBody(msgs[i].getMessageBody());

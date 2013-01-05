@@ -28,6 +28,7 @@
             android:layout_height="wrap_content"
             android:background="#fff"
             android:stretchColumns="0" >
+            
 
             <TableRow
                 android:id="@+id/TableRow02"
@@ -46,7 +47,8 @@
                     android:id="@+id/tabBarMyTripsButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/mytrips_unclick" />
+                    android:background="@drawable/mytrips_unclick"
+                    />
 
                 <Button
                     android:id="@+id/tabBarRulesButton"

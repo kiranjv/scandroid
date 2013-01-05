@@ -435,19 +435,19 @@ public class ConfigurePreferences {
 		return sharedPreferences.getBoolean("EMERGENCYSAVETRIP", false);
 	}
 
-	public void isBaterryLow(boolean status) {
+	public void isShutDown(boolean status) {
 		sharedPreferences = context.getSharedPreferences("TRIP",
 				context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = sharedPreferences.edit();
-		editor.putBoolean("BATTERYLOW", status);
+		editor.putBoolean("ShutDown", status);
 		editor.commit();
 		
 	}
 	
-	public boolean isBaterryLow() {
+	public boolean isShutDown() {
 		sharedPreferences = context.getSharedPreferences("TRIP",
 				context.MODE_PRIVATE);
-		return sharedPreferences.getBoolean("BATTERYLOW", false);
+		return sharedPreferences.getBoolean("ShutDown", false);
 	}
 	
 }

@@ -913,16 +913,7 @@ public class HomeScreenActivity extends ListActivity {
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
-			if (!ConfigurationHandler.getInstance().getConfiguration().getSplashShow() && new ConfigurePreferences(contextHomeScreenActivity)
-					.getTripStrated()) {
-				Log.v(TAG, "Power button press on trip running");
-				Toast.makeText(this, "Power button press on trip running",
-						Toast.LENGTH_LONG).show();
-				new ConfigurePreferences(contextHomeScreenActivity).isBaterryLow(true);
-				return super.onKeyDown(0, null);
-			}
-		}
+		
 		return super.onKeyDown(keyCode, event);
 
 	}
@@ -1146,9 +1137,9 @@ public class HomeScreenActivity extends ListActivity {
 
 				} else {
 					Log.d(TAG, "Login Failled - " + failureMessage);
-					UIUtils.OkDialog(
-							HomeScreenActivity.contextHomeScreenActivity,
-							failureMessage);
+//					UIUtils.OkDialog(
+//							HomeScreenActivity.contextHomeScreenActivity,
+//							failureMessage);
 				}
 
 			} catch (Exception e) {

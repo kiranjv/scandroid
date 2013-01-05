@@ -39,7 +39,8 @@
 	android:id="@+id/TripHistoryTripLogRowPoints1TextView" 
 	android:layout_width="wrap_content" 
 	android:layout_height="wrap_content"
-	android:textColor="#000"	
+	android:textColor="#000"
+	android:textSize="9sp"	
 	/>
 	
 <TextView android:text="Points" 

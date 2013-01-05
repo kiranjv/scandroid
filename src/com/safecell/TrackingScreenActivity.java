@@ -1039,16 +1039,7 @@ public class TrackingScreenActivity extends Activity {
 			}
 		}
 		
-		if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
-			if (ConfigurationHandler.getInstance().getConfiguration().getSplashShow() && new ConfigurePreferences(this)
-					.getTripStrated()) {
-				Log.v(TAG, "Power button press on trip running");
-				Toast.makeText(this, "Power button press on trip running",
-						Toast.LENGTH_LONG).show();
-				new ConfigurePreferences(context).isBaterryLow(true);
-				return super.onKeyDown(0, null);
-			}
-		}
+		
 
 		return super.onKeyDown(keyCode, event);
 	}

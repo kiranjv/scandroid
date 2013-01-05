@@ -20,7 +20,17 @@ public class DBAdapter {
 		this.context = context;
 		mDBHelper = new DBHelper(this.context);
 		if (db == null) {
-			db = mDBHelper.getWritableDatabase();
+			try {
+				
+				// db = mDBHelper.getWritableDatabase();
+				
+				
+				db = mDBHelper.getReadableDatabase();
+
+			} catch (Exception e) {
+
+				e.printStackTrace();
+			}
 		}
 		// Log.v("Safecell :"+"DBAdapter","context= "+this.context);
 	}
@@ -29,11 +39,12 @@ public class DBAdapter {
 
 		public DBHelper(Context context) {
 			super(context, DATABASE_NAME, null, DATABASE_VERSION);
+
 		}
 
 		@Override
 		public void onCreate(SQLiteDatabase db) {
-
+			Log.e("DBAdapter", "Dbadater onCreate");
 			db.execSQL(TripRepository.CREATE_QUERY);
 			db.execSQL(TripJourneysRepository.CREATE_TABLE_QUERY);
 			db.execSQL(JourneyEventsRepository.CREATE_TABLE_QUERY);
@@ -53,7 +64,16 @@ public class DBAdapter {
 
 		@Override
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+			Log.e("DBAdapter", "Dbadater onUpgrade");
 		}
+		
+		@Override
+		public void onOpen(SQLiteDatabase db) {
+			
+			super.onOpen(db);
+		}
+		
+		
 	}
 
 	public Cursor selectQuery(String sql, String[] args) {
@@ -62,7 +82,7 @@ public class DBAdapter {
 
 			// db = mDBHelper.getWritableDatabase();
 			// Log.v("Safecell :"+"DBAdapter","db = "+db);
-			
+
 			cursor = db.rawQuery(sql, args);
 
 			if (cursor != null) {
@@ -93,7 +113,7 @@ public class DBAdapter {
 
 	public DBAdapter open() throws SQLException {
 		try {
-			db = mDBHelper.getWritableDatabase();
+			db = mDBHelper.getReadableDatabase();
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

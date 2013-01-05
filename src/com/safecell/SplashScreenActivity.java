@@ -101,6 +101,8 @@ public class SplashScreenActivity extends Activity implements Runnable,
 
 		DBAdapter dbAdapter = new DBAdapter(context);
 		try {
+			
+			dbAdapter.closeDatabase();
 			dbAdapter.open();
 		} catch (Exception e) {
 			e.printStackTrace();

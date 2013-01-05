@@ -1,6 +1,7 @@
 package com.safecell;
 
 import com.safecell.dataaccess.AccountRepository;
+import com.safecell.dataaccess.DBAdapter;
 import com.safecell.dataaccess.InteruptionRepository;
 import com.safecell.dataaccess.ProfilesRepository;
 import com.safecell.dataaccess.SMSRepository;
@@ -190,11 +191,29 @@ public class TrackingService extends Service implements LocationListener,
 	public void onCreate() {
 		Log.v(TAG, "OnCreate");
 		context = TrackingService.this;
+		int count = 0;
+		while (!NetWork_Information.isNetworkAvailable(context)) {
+			Log.v(TAG, "Waiting for mobile network");
+			if (count < 10) {
+				waiting(2 * 1000);
+				count++;
+			} else {
+				break;
+			}
+		}
 		Log.v(TAG, "BootReceiver.SHUTDOWNSAVE = " + BootReceiver.SHUTDOWNSAVE);
 		if (BootReceiver.SHUTDOWNSAVE) {
 			Log.v(TAG, "SHUTDOWN save is active save previous trip data");
+			try {
+//				DBAdapter dbAdapter =  new DBAdapter(context);
+//				dbAdapter.closeDatabase();
+//				dbAdapter.open();
 			SaveTrip saveTrip = new SaveTrip();
 			saveTrip.execute();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
 
 		}
 
@@ -330,14 +349,12 @@ public class TrackingService extends Service implements LocationListener,
 
 	private void autoStartTrip() {
 		Log.d(TAG, "Auto Start Trip Started ");
-		foregroundService("Auto trip started");
+		//foregroundService("Auto trip started");
 		Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
 				Toast.LENGTH_LONG).show();
 
-		Log.v(TAG, "Setting batery timer");
-		baterytimer.cancel();
-		baterytimer = new Timer();
-		baterytimer.scheduleAtFixedRate(new CustomTimerTask(), 0, 60000);
+		Log.v(TAG, "Setting ShutDown Flag");
+		new ConfigurePreferences(context).isShutDown(true);
 
 		// tempTripJourneyWayPointsRepository.deleteTrip();
 		// ir.deleteInteruptions();
@@ -504,10 +521,12 @@ public class TrackingService extends Service implements LocationListener,
 
 	public void saveTripAsyncTask(final Context frontScreenActivity) {
 
-		SharedPreferences.Editor editor = sharedPreferences.edit();
+		/*SharedPreferences.Editor editor = sharedPreferences.edit();
 		editor.putBoolean("isTripPaused", false);
 		editor.putBoolean("isTripStarted", false);
-		editor.commit();
+		editor.commit();*/
+		new ConfigurePreferences(frontScreenActivity).setTripStrated(false);
+		new ConfigurePreferences(frontScreenActivity).setTripPaused(false);
 
 		String apiKey = "";
 		int accountID = 0;
@@ -581,11 +600,19 @@ public class TrackingService extends Service implements LocationListener,
 			Log.e(TAG, "Json create time: " + createJsonTime);
 
 			long sendHTTPStart = System.currentTimeMillis();
-			HttpResponse httpResponse = submitNewTripJourney.postRequest();
+			
+			while(true) {
+				Log.v(TAG, "Checking network status");
+				if (NetWork_Information.isNetworkAvailable(context)) {
+				 break;
+				}
+			}
+			
+			HttpResponse httpResponse = httpResponse = submitNewTripJourney.postRequest();
 			long sendHTTPEnd = System.currentTimeMillis();
 			long serverTime = (sendHTTPEnd - sendHTTPStart) / 1000;
 			Log.e(TAG, "HTTP Process time: " + serverTime);
-
+			Log.v(TAG, "IhttpResponse: "+httpResponse);
 			if (httpResponse == null) {
 
 				Log.e(TAG,
@@ -597,6 +624,8 @@ public class TrackingService extends Service implements LocationListener,
 				resultFlag = false;
 
 			} else {
+				Log.v(TAG, " Response code:"+httpResponse.getStatusLine().toString());
+				
 				SubmitNewTripJourneyResponceHandler submitNewTripJourneyResponceHandler = new SubmitNewTripJourneyResponceHandler(
 						TrackingService.this);
 				try {
@@ -796,17 +825,8 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d(TAG, "Longitude  " + location.getLongitude() + " Latitude "
 				+ location.getLatitude());
 
-		if (getCurrentBateryLevel() <= BATEERY_THRESHOLD_LOW
-				&& getCurrentBateryStatus() != 2) {
-			Log.v(TAG, "Battery status too low to start trip");
-			// removeLocationUpdates();
-			// UIUtils.OkDialog(context, "Battery too low.");
-			/*
-			 * Toast.makeText(context, "Battery is too low ",
-			 * Toast.LENGTH_SHORT) .show();
-			 */
-			return;
-		}
+		
+		
 		// Ignore way point Emergency call in active and trip not started
 		if (new ConfigurePreferences(context).getEmergencyTRIPSAVE()
 				&& !new ConfigurePreferences(context).getTripStrated()) {
@@ -824,7 +844,7 @@ public class TrackingService extends Service implements LocationListener,
 			// saveTrip(context);
 			if (ABANDONFLAG) {
 				Log.v(TAG, "Trip Abondon Activated. ");
-				foregroundService("Trip is Abondoned.");
+				//foregroundService("Trip is Abondoned.");
 				makeTripAbandon(context);
 				ABANDONFLAG = false;
 			}
@@ -1105,8 +1125,8 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d(TAG, "Distance Travelled = " + total_distance);
 
 		if (!new ConfigurePreferences(context).isTripAbandon()) {
-			// Toast.makeText(context, "Avg speed: " + avarageSpeed,
-			// 500).show();
+			 Toast.makeText(context, "Avg speed: " + avarageSpeed,
+			 500).show();
 		}
 		SharedPreferences sharedPreferences = getSharedPreferences("TRIP",
 				MODE_WORLD_READABLE);
@@ -1270,7 +1290,7 @@ public class TrackingService extends Service implements LocationListener,
 		protected void onPreExecute() {
 			resultFlag = false;
 			context = TrackingService.context;
-
+			
 			try {
 
 				if (!new ConfigurePreferences(context).isTripAbandon()
@@ -1299,6 +1319,7 @@ public class TrackingService extends Service implements LocationListener,
 		protected Boolean doInBackground(Void... params) {
 			try {
 				Log.v(TAG, "Do In Background");
+			
 				// Looper.prepare();
 				TrackingScreenActivity.isTripSavingInProgress = true;
 				TrackingService.ignoreLocationUpdates = true;
@@ -1344,9 +1365,10 @@ public class TrackingService extends Service implements LocationListener,
 				// }
 				//
 				if (!new ConfigurePreferences(context).isTripAbandon()) {
+					Log.v(TAG, "Trip fail to save");
 					Toast.makeText(TrackingService.context,
 							"Trip fail to save", Toast.LENGTH_LONG).show();
-					foregroundService("Trip Save Failed. ");
+					//foregroundService("Trip Save Failed. ");
 				}
 				// // tripNotSaveDialog(TrackingScreenActivity.context,
 				// // EXCEPTION_WHILE_SAVING);
@@ -1357,28 +1379,39 @@ public class TrackingService extends Service implements LocationListener,
 			} else {
 				Log.d(TAG, "Trip Saved Sucessfully: " + result);
 				if (!new ConfigurePreferences(context).isTripAbandon()) {
+					Log.v(TAG, "Trip saved sucessfully");
 					Toast.makeText(TrackingService.context,
 							"Trip Saved Sucessfully ", Toast.LENGTH_LONG)
 							.show();
-					foregroundService("Trip Saved Sucessfully ");
+					
+					//foregroundService("Trip Saved Sucessfully ");
 				}
+				
+				new ConfigurePreferences(context).isTripAbandon(false);
+				// cancel battery timer and flags
+				if (new ConfigurePreferences(context).isShutDown()) {
+					Log.v(TAG, "DeActivating ShutDown configuration flag");
+					new ConfigurePreferences(context).isShutDown(false);
+				}
+
+				if (BootReceiver.SHUTDOWNSAVE) {
+					BootReceiver.SHUTDOWNSAVE = false;
+				}
+				
+				Log.v(TAG, "Clearing local database trip data");
+				TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
+						TrackingService.this);
+				tempTripJourneyWayPointsRepository.deleteTrip();
+				ir.deleteInteruptions();
 
 			}
 
-			new ConfigurePreferences(context).isTripAbandon(false);
+			
 			// un mute silent mode.
 			AudioManager aManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 			aManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 
-			// cancel battery timer and flags
-			if (new ConfigurePreferences(context).isBaterryLow()) {
-				Log.v(TAG, "DeActivating low battery configuration flag");
-				new ConfigurePreferences(context).isBaterryLow(false);
-			}
-
-			if (BootReceiver.SHUTDOWNSAVE) {
-				BootReceiver.SHUTDOWNSAVE = false;
-			}
+			
 			callActivityAfterTripSave();
 			// start trip again
 			startTrip();
@@ -1422,10 +1455,7 @@ public class TrackingService extends Service implements LocationListener,
 				homeScreenActivity.finish();
 			}
 
-			TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
-					TrackingService.this);
-			tempTripJourneyWayPointsRepository.deleteTrip();
-			ir.deleteInteruptions();
+			
 
 			Intent homeScreen = new Intent(TrackingService.this,
 					HomeScreenActivity.class);
@@ -1860,81 +1890,8 @@ public class TrackingService extends Service implements LocationListener,
 		}
 	}
 
-	private class CustomTimerTask extends TimerTask {
 
-		@Override
-		public void run() {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					BateryTimerHandler.post(new Runnable() {
-						@Override
-						public void run() {
-							int level = getCurrentBateryLevel();
-							Log.d(TAG, "Baterry current status: " + level);
-							if (level <= BATEERY_THRESHOLD_LOW
-									&& getCurrentBateryStatus() != 2) {
 
-								if (InformatonUtils
-										.isServiceRunning(getApplicationContext())) {
-									if (new ConfigurePreferences(context)
-											.getTripStrated()) {
-										Toast.makeText(
-												context,
-												"Battary current level: "
-														+ level + "%",
-												Toast.LENGTH_SHORT).show();
-										Log.v(TAG,
-												"Activating low battery configuration flag");
-										new ConfigurePreferences(context)
-												.isBaterryLow(true);
-										Log.v(TAG, "Low battery trip save");
-										saveTrip(context);
-										baterytimer.cancel();
-									} else {
-										Log.v(TAG,
-												"Displaying dialog for battery low condition");
-										UIUtils.OkDialog(
-												HomeScreenActivity.contextHomeScreenActivity,
-												"Battery is too low. Please plugin charger to continue trip");
-									}
-								}
 
-							}
-
-						}
-					});
-
-				}
-			}).start();
-
-		}
-
-	}
-
-	public int getCurrentBateryLevel() {
-		return registerReceiver(null,
-				new IntentFilter(Intent.ACTION_BATTERY_CHANGED)).getIntExtra(
-				BatteryManager.EXTRA_LEVEL, -1);
-	}
-
-	public int getCurrentBateryScale() {
-		return BATTERYintent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-	}
-
-	public int getCurrentBateryTemporature() {
-		return BATTERYintent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-	}
-
-	public int getCurrentBateryVolatage() {
-		return BATTERYintent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-	}
-
-	public int getCurrentBateryStatus() {
-		return registerReceiver(null,
-				new IntentFilter(Intent.ACTION_BATTERY_CHANGED)).getIntExtra(
-				BatteryManager.EXTRA_STATUS, -1);
-
-	}
 
 }
