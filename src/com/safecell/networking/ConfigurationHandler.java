@@ -60,6 +60,7 @@ public class ConfigurationHandler {
 
 	public static final ConfigurationHandler getInstance() {
 		if (handler == null) {
+			Log.e("ConfigurationHandler", "NO Configuration available");
 			handler = new ConfigurationHandler();
 		}
 		return handler;
@@ -99,13 +100,7 @@ public class ConfigurationHandler {
 					configuration.setTripStopTime(stopTime < 1 ? configuration
 							.getTripStopTime() : stopTime);
 				}
-				if (!configObj.getJSONObject(0).getJSONArray("DEMAIL")
-						.getJSONObject(0).getString("value").equals(str)) {
-					configuration.setDisableEmail(Integer.parseInt(configObj
-							.getJSONObject(0).getJSONArray("DEMAIL")
-							.getJSONObject(0).getString("value")) != 0);
-
-				}
+				
 				if (!configObj.getJSONObject(0).getJSONArray("DCALL")
 						.getJSONObject(0).getString("value").equals(str)) {
 					boolean disable = Integer.parseInt(configObj
@@ -167,7 +162,13 @@ public class ConfigurationHandler {
 					Log.d(TAG, "CONTROLLER NUMBER: " + controller_number);
 					configuration.setController_number(controller_number);
 				}
+				if (!configObj.getJSONObject(0).getJSONArray("DEMAIL")
+						.getJSONObject(0).getString("value").equals(str)) {
+					configuration.setDisableEmail(Integer.parseInt(configObj
+							.getJSONObject(0).getJSONArray("DEMAIL")
+							.getJSONObject(0).getString("value")) != 0);
 
+				}
 				Log.d(TAG, "Configuration :  " + configuration.toString());
 			}
 		} catch (Exception e) {

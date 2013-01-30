@@ -3,7 +3,7 @@
     android:id="@+id/ViewFlipper01"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@drawable/splash_screen_main" >
+    android:background="@drawable/final_att_horizontal_branding" >
 
     <LinearLayout
         android:id="@+id/FilperFirstView"
@@ -62,7 +62,7 @@
                     android:id="@+id/TableRow02"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dip" >
+                    android:layout_marginBottom="30dip" >
 
                     <ImageView
                         android:id="@+id/tripRecordingPhoneImageView"
@@ -105,7 +105,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
-                android:layout_marginBottom="5dip"
+                android:layout_marginBottom="55dip"
                 android:layout_marginTop="5dip"
                 android:gravity="center" >
 

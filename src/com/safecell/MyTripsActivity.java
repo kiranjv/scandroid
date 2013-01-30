@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -23,6 +24,7 @@ import com.safecell.utilities.DateUtils;
 import com.safecell.utilities.FlurryUtils;
 import com.safecell.utilities.LocationSP;
 import com.safecell.utilities.StateAddress;
+import com.safecell.utilities.URLs;
 
 public class MyTripsActivity extends ListActivity{
 	
@@ -41,6 +43,7 @@ public class MyTripsActivity extends ListActivity{
 
 	
 	int arrayIndex = 0;
+	private Button faxButton;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -88,13 +91,24 @@ public class MyTripsActivity extends ListActivity{
 		btnMyTrips = (Button) findViewById(R.id.tabBarMyTripsButton);
 		rulesButton = (Button) findViewById(R.id.tabBarRulesButton);
 //		settingsButton = (Button) findViewById(R.id.tabBarSettingsButton);
+		faxButton = (Button) findViewById(R.id.tabBarFaxButton);
 		btnMyTrips.setBackgroundResource(R.drawable.mytrips_clicked);
 		
-		TabControler tabControler =new TabControler(MyTripsActivity.this);
+		final TabControler tabControler =new TabControler(MyTripsActivity.this);
 		//btnMyTrips.setOnClickListener(tabControler.getMyTripsOnClickListner());
 		rulesButton.setOnClickListener(tabControler.getRulesOnClickListner());
 		homeButton.setOnClickListener(tabControler.getHomeTabOnClickListner());
 //		settingsButton.setOnClickListener(tabControler.getSettingOnClickListener());
+		faxButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				//faxButton.setBackgroundResource(R.drawable.settings_clicked);
+				//Activity activity = MyTripsActivity.this;
+				//tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, MyTripsActivity.this);
+
+			}
+		});
 		
 	}
 	

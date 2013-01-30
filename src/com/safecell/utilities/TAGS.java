@@ -24,7 +24,21 @@ public class TAGS {
 	public static String CONTORL_NUMBER = "+918971855771";
 
 	public static boolean SHOW_SPLASH = true;
+	
+	
+	public static int tripStartSpeed = 5;
 
+	public static int tripStopTime = 5;
+
+	public static boolean disableEmail = true;
+
+	public static boolean disableCall = true;
+
+	public static boolean disableTexting = true;
+
+	public static boolean disableWeb = true;
+
+	public static boolean logWayPoints = true;
 	
 
 }

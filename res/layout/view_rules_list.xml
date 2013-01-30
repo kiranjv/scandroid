@@ -10,10 +10,15 @@
 		android:layout_height="wrap_content" android:orientation="vertical"
 		android:background="#000" android:layout_weight="1">
 	-->
-	<LinearLayout android:layout_width="fill_parent"
-		android:layout_height="wrap_content" android:background="@drawable/logo_patch"
-		android:gravity="right" android:layout_alignParentTop="true"
-		android:id="@+id/LinearLayout01">
+
+	<LinearLayout
+	    android:id="@+id/LinearLayout01"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentTop="true"
+	    android:layout_weight="0.02"
+	    android:background="@drawable/logo_patch"
+	    android:gravity="right" >
 
 		<ImageButton android:id="@+id/ViewRulesRefreshButton"
 			android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -42,6 +47,7 @@
 
 
 	<!--  </RelativeLayout>-->
-	<include layout="@layout/tab_bar_layout" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:layout_gravity="bottom" />
+	<include layout="@layout/tab_bar_layout" android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:layout_gravity="bottom"
+		android:gravity="center" />
 </LinearLayout>

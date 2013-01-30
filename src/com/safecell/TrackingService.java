@@ -29,6 +29,7 @@ import org.apache.http.HttpResponse;
 
 import android.app.AlertDialog;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentValues;
@@ -56,6 +57,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
@@ -350,8 +352,8 @@ public class TrackingService extends Service implements LocationListener,
 	private void autoStartTrip() {
 		Log.d(TAG, "Auto Start Trip Started ");
 		//foregroundService("Auto trip started");
-		Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
-				Toast.LENGTH_LONG).show();
+//		Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
+//				Toast.LENGTH_LONG).show();
 
 		Log.v(TAG, "Setting ShutDown Flag");
 		new ConfigurePreferences(context).isShutDown(true);
@@ -1125,8 +1127,8 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d(TAG, "Distance Travelled = " + total_distance);
 
 		if (!new ConfigurePreferences(context).isTripAbandon()) {
-			 Toast.makeText(context, "Avg speed: " + avarageSpeed,
-			 500).show();
+//			 Toast.makeText(context, "Avg speed: " + avarageSpeed,
+//			 500).show();
 		}
 		SharedPreferences sharedPreferences = getSharedPreferences("TRIP",
 				MODE_WORLD_READABLE);
@@ -1250,8 +1252,124 @@ public class TrackingService extends Service implements LocationListener,
 		}// if trip started
 			// trackingScreenActivity.dismProgressDialog();
 	}
-
 	private void insertIntoSMS() {
+		Cursor c = context.getContentResolver().query(
+				Uri.parse("content://sms"), null, null, null, null);
+		c.moveToFirst();
+
+		if (smsRepository == null) {
+			// Log.v("Safecell :" + "NULL: ", "smsRepository");
+			smsRepository = new SMSRepository(context);
+		}
+
+		smsArrayList = smsRepository.scSmsArrayList();
+
+		if (smsArrayList == null) {
+			// Log.v("Safecell :" + "NULL: ", "smsArrayList");
+			return;
+		}
+
+		// Log.v("Safecell :" + "smsArrayList.size()", "size = "
+		// + smsArrayList.size());
+
+		boolean smsPresent = false;
+		int noOfSmses = smsArrayList.size();
+
+		if (smsArrayList.size() == 0) {
+			smsPresent = false;
+		} else {
+
+			for (int i = 0; i < smsArrayList.size(); i++) {
+				ContentValues values = new ContentValues();
+
+				values.put("thread_id", smsArrayList.get(i).getThread_id());
+				values.put("address", smsArrayList.get(i).getAddress());
+				values.put("person", smsArrayList.get(i).getPerson());
+				values.put("date", smsArrayList.get(i).getDate());
+				values.put("protocol", smsArrayList.get(i).getProtocol());
+				values.put("read", smsArrayList.get(i).getRead());
+				values.put("status", smsArrayList.get(i).getStatus());
+				values.put("type", smsArrayList.get(i).getType());
+				values.put("reply_path_present", smsArrayList.get(i)
+						.getReply_path_present());
+				values.put("subject", smsArrayList.get(i).getSubject());
+				values.put("body", smsArrayList.get(i).getBody());
+				values.put("service_center", smsArrayList.get(i)
+						.getService_center());
+				values.put("locked", smsArrayList.get(i).getLocked());
+
+				context.getContentResolver().insert(Uri.parse("content://sms"),
+						values);
+			}
+			smsRepository.deleteSms();
+			smsPresent = true;
+		}
+
+		boolean callPresent = false;
+
+		CharSequence contentTitle2 = "Calls during trip";
+		CharSequence contentText2 = TrackingScreenActivity.incomingCallCounter
+				+ " missed calls during trip.";
+
+		if (TrackingScreenActivity.incomingCallCounter > 0) {
+			callPresent = true;
+		}
+
+		String sms = (noOfSmses == 1) ? " text " : " texts ";
+		String calls = (TrackingScreenActivity.incomingCallCounter == 1) ? " incoming call "
+				: " incoming calls ";
+
+		boolean showNotification = false;
+
+		if (smsPresent && callPresent) {
+			contentTitle2 = "Blocked texts and Incoming Calls";
+
+			contentText2 = "SafeCellApp blocked " + noOfSmses + sms
+					+ "(available in your SMS Inbox) and "
+					+ TrackingScreenActivity.incomingCallCounter + calls + "during your trip.";
+
+			showNotification = true;
+		} else if (smsPresent) {
+			contentTitle2 = "Blocked Texts";
+			contentText2 = "SafeCellApp blocked " + noOfSmses + sms
+					+ "during your trip, that "
+					+ ((noOfSmses == 1) ? "is" : "are")
+					+ " now available in your SMS Inbox.";
+
+			showNotification = true;
+		} else if (callPresent) {
+			contentTitle2 = "Blocked Incoming Calls";
+
+			contentText2 = "SafeCellApp blocked " + TrackingScreenActivity.incomingCallCounter + calls
+					+ "during your trip.";
+
+			showNotification = true;
+		}
+
+		if (showNotification) {
+			NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			Notification notification = new Notification(
+					R.drawable.launch_icon, contentTitle2,
+					System.currentTimeMillis());
+
+			RemoteViews contentView = new RemoteViews(getPackageName(),
+					R.layout.sms_notification);
+			contentView.setImageViewResource(R.id.NotificationImage,
+					R.drawable.launch_icon);
+			contentView.setTextViewText(R.id.SmsTextNotification, contentText2);
+			int notification_text_color = android.R.color.white;
+			// contentView.setTextColor(R.id.SmsTextNotification,
+			// notification_text_color);
+			notification.contentView = contentView;
+			Intent notificationIntent = new Intent();
+			PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+					notificationIntent, 0);
+			notification.contentIntent = contentIntent;
+			notificationManager.notify(0, notification);
+		}
+
+	}
+	private void insertIntoSMS_Old() {
 		Cursor c = context.getContentResolver().query(
 				Uri.parse("content://sms"), null, null, null, null);
 		c.moveToFirst();
@@ -1366,8 +1484,8 @@ public class TrackingService extends Service implements LocationListener,
 				//
 				if (!new ConfigurePreferences(context).isTripAbandon()) {
 					Log.v(TAG, "Trip fail to save");
-					Toast.makeText(TrackingService.context,
-							"Trip fail to save", Toast.LENGTH_LONG).show();
+//					Toast.makeText(TrackingService.context,
+//							"Trip fail to save", Toast.LENGTH_LONG).show();
 					//foregroundService("Trip Save Failed. ");
 				}
 				// // tripNotSaveDialog(TrackingScreenActivity.context,
@@ -1380,14 +1498,14 @@ public class TrackingService extends Service implements LocationListener,
 				Log.d(TAG, "Trip Saved Sucessfully: " + result);
 				if (!new ConfigurePreferences(context).isTripAbandon()) {
 					Log.v(TAG, "Trip saved sucessfully");
-					Toast.makeText(TrackingService.context,
-							"Trip Saved Sucessfully ", Toast.LENGTH_LONG)
-							.show();
+//					Toast.makeText(TrackingService.context,
+//							"Trip Saved Sucessfully ", Toast.LENGTH_LONG)
+//							.show();
 					
 					//foregroundService("Trip Saved Sucessfully ");
 				}
 				
-				new ConfigurePreferences(context).isTripAbandon(false);
+				
 				// cancel battery timer and flags
 				if (new ConfigurePreferences(context).isShutDown()) {
 					Log.v(TAG, "DeActivating ShutDown configuration flag");
@@ -1406,7 +1524,8 @@ public class TrackingService extends Service implements LocationListener,
 
 			}
 
-			
+			new ConfigurePreferences(context).isTripAbandon(false);
+			new ConfigurePreferences(context).setEmergencyTripSave(false);
 			// un mute silent mode.
 			AudioManager aManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 			aManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
@@ -1707,7 +1826,23 @@ public class TrackingService extends Service implements LocationListener,
 			TAGS.CONTORL_NUMBER = controll_number;
 			TAGS.SHOW_SPLASH = ConfigurationHandler.getInstance()
 					.getConfiguration().getSplashShow();
+			TAGS.disableCall = ConfigurationHandler.getInstance()
+					.getConfiguration().isDisableCall();
 
+			TAGS.disableTexting = ConfigurationHandler.getInstance()
+					.getConfiguration().isDisableTexting();
+			TAGS.disableEmail = ConfigurationHandler.getInstance()
+					.getConfiguration().isDisableEmail();
+			TAGS.disableWeb = ConfigurationHandler.getInstance()
+					.getConfiguration().isDisableWeb();
+			TAGS.logWayPoints = ConfigurationHandler.getInstance()
+					.getConfiguration().isLogWayPoints();
+			TAGS.tripStartSpeed = ConfigurationHandler.getInstance()
+					.getConfiguration().getTripStartSpeed();
+			TAGS.tripStopTime = ConfigurationHandler.getInstance()
+					.getConfiguration().getTripStopTime();
+			
+			
 			boolean showsplash = ConfigurationHandler.getInstance()
 					.getConfiguration().getSplashShow();
 			if (showsplash) {

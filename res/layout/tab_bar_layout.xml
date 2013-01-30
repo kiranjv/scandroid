@@ -1,64 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/tabBarLinearLayout"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical" >
+	android:layout_width="wrap_content" android:layout_height="wrap_content"
 
-    <TextView
-        android:id="@+id/tabBarCurentLocationTextView"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="#fff"
-        android:paddingLeft="5dip"
-        android:text="Houstan, Texas"
-        android:textColor="#000"
-        android:textSize="12dip" >
-    </TextView>
+	android:id="@+id/tabBarLinearLayout" android:orientation="vertical">
+	
+	<TextView
+	    android:id="@+id/tabBarCurentLocationTextView"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:background="#fff"
+	    android:paddingLeft="5dip"
+	    android:text="Houstan, Texas"
+	    android:textColor="#000"
+	    android:textSize="12dip" >
+</TextView>
+	
+	<LinearLayout android:id="@+id/LinearLayout01" 
+ 		android:layout_width="fill_parent" 
+ 		android:layout_height="wrap_content"
+ 		 android:paddingLeft="5dip"
+ 		 android:gravity="center"
+		android:background="@color/white">
+	
+		<Button android:background="@drawable/home_unclick" android:id="@+id/tabBarHomeButton"
+			android:layout_width="80dip" android:layout_height="wrap_content"></Button>
+		<Button android:background="@drawable/mytrips_unclick"
+			android:id="@+id/tabBarMyTripsButton" android:layout_width="wrap_content"
+			android:layout_height="wrap_content"></Button>
+		
+		<Button android:background="@drawable/rules_uncheck" android:id="@+id/tabBarRulesButton"
 
-    <LinearLayout
-        android:id="@+id/LinearLayout01"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@color/white" >
+			android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
-        <TableLayout
-            android:id="@+id/TableLayout01"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:background="#fff"
-            android:stretchColumns="0" >
-            
+			
 
-            <TableRow
-                android:id="@+id/TableRow02"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center" >
-
-                <Button
-                    android:id="@+id/tabBarHomeButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="70dp"
-                    android:background="@drawable/home_unclick" />
-
-                <Button
-                    android:id="@+id/tabBarMyTripsButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/mytrips_unclick"
-                    />
-
-                <Button
-                    android:id="@+id/tabBarRulesButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="70dp"
-                    android:background="@drawable/rules_uncheck" />
-            </TableRow>
-
-        </TableLayout>
-    </LinearLayout>
+		<Button android:background="@drawable/settings1_unclicked" android:id="@+id/tabBarFaxButton"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+	 
+	 </LinearLayout>
 
 </LinearLayout>

@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -29,6 +30,7 @@ import com.safecell.utilities.DateUtils;
 import com.safecell.utilities.FlurryUtils;
 import com.safecell.utilities.LocationSP;
 import com.safecell.utilities.StateAddress;
+import com.safecell.utilities.URLs;
 
 public class MyTripDiscriptionActivity extends Activity {
 	TextView tvTotalPoints, tvPenalty, tvGrade, tvTotalMiles;
@@ -55,6 +57,7 @@ public class MyTripDiscriptionActivity extends Activity {
 	public static TextView tvLocation;
 
 	String callingActivity="";
+	private Button faxButton;
 
 
 	@Override
@@ -182,6 +185,7 @@ public class MyTripDiscriptionActivity extends Activity {
 		homeButton = (Button) findViewById(R.id.tabBarHomeButton);
 		btnMyTrips = (Button) findViewById(R.id.tabBarMyTripsButton);
 		rulesButton = (Button) findViewById(R.id.tabBarRulesButton);
+		faxButton = (Button) findViewById(R.id.tabBarFaxButton);
 //		settingsButton = (Button) findViewById(R.id.tabBarSettingsButton);
 		btnMyTrips.setBackgroundResource(R.drawable.mytrips_clicked);
 		tvTotalPoints =(TextView)findViewById(R.id.MyTripDescriptionTripPointsTextView);
@@ -197,11 +201,21 @@ public class MyTripDiscriptionActivity extends Activity {
 		tvGrade.setText("100%");
 		tvPenalty.setText("0");
 		
-		TabControler tabControler =new TabControler(MyTripDiscriptionActivity.this);
+		final TabControler tabControler =new TabControler(MyTripDiscriptionActivity.this);
 		btnMyTrips.setOnClickListener(tabControler.getMyTripsOnClickListner());
 		homeButton.setOnClickListener(tabControler.getHomeTabOnClickListner());
 		rulesButton.setOnClickListener(tabControler.getRulesOnClickListner());
 //		settingsButton.setOnClickListener(tabControler.getSettingOnClickListener());
+		faxButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+			//	faxButton.setBackgroundResource(R.drawable.settings_clicked);
+			//	Activity activity = MyTripDiscriptionActivity.this;
+			//	tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, MyTripDiscriptionActivity.this);
+
+			}
+		});
 		penalityLinearLayout = (LinearLayout)findViewById(R.id.MyTripDescriptionPenaltyLinearLayout);
 		tripsPointsLinearLayout = (LinearLayout)findViewById(R.id.MyTripDescriptionTripsPointsLinearLayout);
 		gradeLinearLayout = (LinearLayout)findViewById(R.id.MyTripDescriptionGradeLinearLayout); 

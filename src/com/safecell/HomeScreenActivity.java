@@ -15,6 +15,7 @@ import android.app.ListActivity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -42,6 +43,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -71,11 +75,12 @@ import com.safecell.utilities.StateAddress;
 import com.safecell.utilities.TAGS;
 import com.safecell.utilities.TrailCheck;
 import com.safecell.utilities.UIUtils;
+import com.safecell.utilities.URLs;
 import com.safecell.utilities.Util;
 
 public class HomeScreenActivity extends ListActivity {
 	/** Called when the activity is first created. **/
-	Button startNewTripButton, homeButton, btnMyTrips, rulesButton;
+	Button startNewTripButton, homeButton, btnMyTrips, rulesButton, faxButton;
 	TextView tvTotalTrips, tvGrade, tvTotalMiles;
 	TextView tvUserName, tvUserLevel;
 	public static TextView tvLocation;
@@ -115,6 +120,7 @@ public class HomeScreenActivity extends ListActivity {
 
 	private String TAG = HomeScreenActivity.class.getSimpleName();
 	private TabControler tabControler;
+	private AlertDialog alertDialogForTermsConditions;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -545,6 +551,7 @@ public class HomeScreenActivity extends ListActivity {
 		homeButton = (Button) findViewById(R.id.tabBarHomeButton);
 		btnMyTrips = (Button) findViewById(R.id.tabBarMyTripsButton);
 		rulesButton = (Button) findViewById(R.id.tabBarRulesButton);
+		faxButton = (Button) findViewById(R.id.tabBarFaxButton);
 		homeButton.setBackgroundResource(R.drawable.home_clicked);
 		noTripsSavedTextView = (TextView) findViewById(R.id.noTripsSavedTextView);
 		tvTotalTrips = (TextView) findViewById(R.id.StartNewTripTripsTextView);
@@ -572,6 +579,16 @@ public class HomeScreenActivity extends ListActivity {
 		tabControler = new TabControler(HomeScreenActivity.this);
 		btnMyTrips.setOnClickListener(tabControler.getMyTripsOnClickListner());
 		rulesButton.setOnClickListener(tabControler.getRulesOnClickListner());
+		faxButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				//faxButton.setBackgroundResource(R.drawable.settings_clicked);
+				//Activity activity = HomeScreenActivity.this;
+				//tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, HomeScreenActivity.this);
+
+			}
+		});
 
 		// startNewTripButton.setOnClickListener(startTripOnClickListener);
 		profileImageView.setOnClickListener(profileImageViewOnclickListener);
@@ -651,6 +668,7 @@ public class HomeScreenActivity extends ListActivity {
 
 		}
 	};// Library
+	private WebView wv;
 
 	private void dialogMessage() {
 		Dialog dialog = new AlertDialog.Builder(HomeScreenActivity.this)
@@ -913,7 +931,7 @@ public class HomeScreenActivity extends ListActivity {
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		
+
 		return super.onKeyDown(keyCode, event);
 
 	}
@@ -1137,9 +1155,9 @@ public class HomeScreenActivity extends ListActivity {
 
 				} else {
 					Log.d(TAG, "Login Failled - " + failureMessage);
-//					UIUtils.OkDialog(
-//							HomeScreenActivity.contextHomeScreenActivity,
-//							failureMessage);
+					// UIUtils.OkDialog(
+					// HomeScreenActivity.contextHomeScreenActivity,
+					// failureMessage);
 				}
 
 			} catch (Exception e) {
@@ -1233,5 +1251,7 @@ public class HomeScreenActivity extends ListActivity {
 		}
 
 	}
+
+	
 }// end
 

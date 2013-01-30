@@ -6,6 +6,7 @@ import com.safecell.model.SCInterruption;
 import com.safecell.model.Emergency.Emergencies;
 import com.safecell.networking.ConfigurationHandler;
 import com.safecell.utilities.ConfigurePreferences;
+import com.safecell.utilities.TAGS;
 import com.safecell.utilities.Util;
 
 import android.app.PendingIntent;
@@ -80,16 +81,14 @@ public class PhoneReceiver extends BroadcastReceiver {
 
 		if (!intent.getAction().equals("android.intent.action.PHONE_STATE"))
 			return;
-	
-		
+
 		String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
 
-		if(b && new ConfigurePreferences(mContext).isTripAbandon()) {
+		if (b && new ConfigurePreferences(mContext).isTripAbandon()) {
 			Log.v(TAG, "Call received when trip abandon");
 			return;
 		}
-		
-		
+
 		if (state.equals(TelephonyManager.EXTRA_STATE_RINGING) && b) {
 			// Allow emergency numbers incoming
 			String phonenumber = intent
@@ -106,7 +105,7 @@ public class PhoneReceiver extends BroadcastReceiver {
 			// telephonyService.silenceRinger();
 
 			// telephonyService.endCall();
-			TrackingScreenActivity.incomingCallCounter++;
+			//TrackingScreenActivity.incomingCallCounter++;
 
 		}
 	}
@@ -135,7 +134,7 @@ public class PhoneReceiver extends BroadcastReceiver {
 				super.onCallStateChanged(state, incomingNumber);
 				String callState = TelephonyManager.EXTRA_STATE_RINGING;
 				Log.d(TAG, "STATE:" + state);
-				
+
 				switch (state) {
 
 				case TelephonyManager.CALL_STATE_RINGING:
@@ -154,9 +153,9 @@ public class PhoneReceiver extends BroadcastReceiver {
 							Log.v(TAG,
 									"Incoming call is emergency number. But InBound is false");
 							try {
-								if (ConfigurationHandler.getInstance()
-										.getConfiguration().isDisableCall()) {
+								if (TAGS.disableCall) {
 									telephonyService.endCall();
+									TrackingScreenActivity.incomingCallCounter++;
 								}
 							} catch (RemoteException e) {
 								// TODO Auto-generated catch block
@@ -166,15 +165,17 @@ public class PhoneReceiver extends BroadcastReceiver {
 						} else {
 							// Allow incoming emergency generate interruption
 							EMERGENCYCALL_ACTIVE = true;
-							//Util.saveInterruption(mContext, SCInterruption.EMEI);
+							// Util.saveInterruption(mContext,
+							// SCInterruption.EMEI);
 						}
 					} else {
-						Log.d(TAG, "Ending incoming call");
+
 						try {
 
-							if (ConfigurationHandler.getInstance()
-									.getConfiguration().isDisableCall()) {
+							if (TAGS.disableCall) {
+								Log.d(TAG, "Ending incoming call");
 								telephonyService.endCall();
+								TrackingScreenActivity.incomingCallCounter++;
 							}
 						} catch (RemoteException e) {
 							// TODO Auto-generated catch block
@@ -184,13 +185,14 @@ public class PhoneReceiver extends BroadcastReceiver {
 					// checking incoming number already called
 					if (!TrackingService.incomingNumberArrayList
 							.contains(incomingNumber) && !is_emergency) {
-						TrackingService.incomingNumberArrayList
-								.add(incomingNumber);
-						Log.v(TAG, "Incoming call occured. auto reply sent:"
-								+ isSendSMS);
+
 						if (isSendSMS) {
-							if (ConfigurationHandler.getInstance()
-									.getConfiguration().isDisableCall()) {
+							if (TAGS.disableCall) {
+								TrackingService.incomingNumberArrayList
+										.add(incomingNumber);
+								Log.v(TAG,
+										"Incoming call occured. auto reply sent:"
+												+ isSendSMS);
 								Log.v(TAG, "Sending auto reply message to "
 										+ incomingNumber);
 								sendmessage(incomingNumber);

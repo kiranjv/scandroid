@@ -8,7 +8,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.Window;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -18,6 +20,7 @@ import com.safecell.model.SCRule;
 import com.safecell.utilities.FlurryUtils;
 import com.safecell.utilities.LocationSP;
 import com.safecell.utilities.StateAddress;
+import com.safecell.utilities.URLs;
 
 public class ViewRuleDetailsActivity extends Activity{
 
@@ -28,6 +31,7 @@ public class ViewRuleDetailsActivity extends Activity{
 	Button startNewTripButton, homeButton, btnMyTrips, settingsButton,rulesButton;
 	private Context context;
 	private LicenseRepository licenseRepository;
+	private Button faxButton;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -44,17 +48,28 @@ public class ViewRuleDetailsActivity extends Activity{
 		homeButton = (Button) findViewById(R.id.tabBarHomeButton);
 		btnMyTrips = (Button) findViewById(R.id.tabBarMyTripsButton);
 		rulesButton = (Button) findViewById(R.id.tabBarRulesButton);
+		faxButton = (Button) findViewById(R.id.tabBarFaxButton);
 		rulesButton.setBackgroundResource(R.drawable.rules_clicked);
 //		settingsButton = (Button) findViewById(R.id.tabBarSettingsButton);
 		secondaryRuleTextView = (TextView) findViewById(R.id.ViewRuleDetailIsPrimary);
 		tvLocation=(TextView) findViewById(R.id.tabBarCurentLocationTextView);
 		tvLocation.setText(LocationSP.LocationSP);
 		
-		TabControler tabControler =new TabControler(ViewRuleDetailsActivity.this);
+		final TabControler tabControler =new TabControler(ViewRuleDetailsActivity.this);
 		homeButton.setOnClickListener(tabControler.getHomeTabOnClickListner());
 		btnMyTrips.setOnClickListener(tabControler.getMyTripsOnClickListner());
 		rulesButton.setOnClickListener(tabControler.getRulesOnClickListner());
 //		settingsButton.setOnClickListener(tabControler.getSettingOnClickListener());
+		faxButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				//faxButton.setBackgroundResource(R.drawable.settings_clicked);
+				//Activity activity = ViewRuleDetailsActivity.this;
+				//tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, ViewRuleDetailsActivity.this);
+
+			}
+		});
 		
 		Intent intent =getIntent();
 		SCRule rule=(SCRule)intent.getSerializableExtra("scRule");

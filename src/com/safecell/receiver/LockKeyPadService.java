@@ -19,6 +19,7 @@ import com.safecell.model.SCInterruption;
 import com.safecell.networking.ConfigurationHandler;
 
 import com.safecell.utilities.ConfigurePreferences;
+import com.safecell.utilities.TAGS;
 import com.safecell.utilities.UIUtils;
 import com.safecell.utilities.Util;
 
@@ -31,7 +32,7 @@ public class LockKeyPadService {
 	private final static String TAG = LockKeyPadService.class.getSimpleName();
 	private static boolean lock_status = false;
 	private static Context mContext;
-	private final static long MONITER_TIMER = 500;
+	private final static long MONITER_TIMER = 2000;
 
 	/**
 	 * Activate the keypad lock based on activate boolean value and trip started
@@ -60,33 +61,39 @@ public class LockKeyPadService {
 								.get(0);
 						String taskpackage = taskInfo.baseActivity
 								.getPackageName();
-//						Log.d(TAG, "Task package = " + taskpackage);
+						Log.d(TAG, "Task package = " + taskpackage);
 
 						if (taskpackage.equalsIgnoreCase(lasttask)) {
 							// Log.d(TAG, "This is previous package");
 						} else if (taskpackage
 								.equalsIgnoreCase("com.android.mms")) {
-							if (ConfigurationHandler.getInstance()
-									.getConfiguration().isDisableTexting()) {
+							if (TAGS.disableTexting) {
 								startDisplayActivityAgain(context);
 								Log.d(TAG,
 										"Got the SMS service. SMS config is enable");
 							}
+							else {
+								
+							}
 						} else if (taskpackage
 								.equalsIgnoreCase("com.android.browser")) {
-							if (ConfigurationHandler.getInstance()
-									.getConfiguration().isDisableWeb()) {
+							Log.d(TAG, "Got browser service.");
+							Log.d(TAG, "Browser config flag status: "+TAGS.disableWeb);
+							if (TAGS.disableWeb) {
 								startDisplayActivityAgain(context);
 								Log.d(TAG,
 										"Got the WEB service. WEB config is enable");
+							}
+							else {
+								
 							}
 						}
 
 						else if (taskpackage
 								.equalsIgnoreCase("com.android.email")) {
-
-							if (ConfigurationHandler.getInstance()
-									.getConfiguration().isDisableEmail()) {
+							Log.d(TAG, "Got email service.");
+							Log.d(TAG, "Email config flag status: "+TAGS.disableEmail);
+							if (TAGS.disableEmail) {
 								startDisplayActivityAgain(context);
 								Log.d(TAG,
 										"Got the email service. email config is enable");
@@ -116,8 +123,8 @@ public class LockKeyPadService {
 						} else if (taskpackage
 								.equalsIgnoreCase("com.android.contacts")) {
 							Log.d(TAG, "Got the contacts service.");
-							if (ConfigurationHandler.getInstance()
-									.getConfiguration().isDisableCall()) {
+							Log.d(TAG, "Contacts config flag status: "+TAGS.disableCall);
+							if (TAGS.disableCall) {
 								startDisplayActivityAgain(context);
 							} else {
 								Util.saveInterruption(context,
@@ -173,12 +180,12 @@ public class LockKeyPadService {
 						else {
 
 							// Log.d(TAG, "Got the other service.");
-							if (ConfigurationHandler.getInstance()
-									.getConfiguration().getSplashShow()
-									&& !taskpackage
-											.equalsIgnoreCase("com.android.phone")) {
+//							if (ConfigurationHandler.getInstance()
+//									.getConfiguration().getSplashShow()
+//									&& !taskpackage
+//											.equalsIgnoreCase("com.android.phone")) {
 								//startDisplayActivityAgain(context);
-							}
+//							}
 //							Util.saveInterruption(context,
 //									SCInterruption.VIOLATION);
 

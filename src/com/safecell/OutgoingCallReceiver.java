@@ -28,6 +28,7 @@ import com.safecell.model.Emergency.Emergencies;
 import com.safecell.model.SCInterruption;
 import com.safecell.networking.ConfigurationHandler;
 import com.safecell.utilities.ConfigurePreferences;
+import com.safecell.utilities.TAGS;
 import com.safecell.utilities.Util;
 
 import android.content.BroadcastReceiver;
@@ -80,8 +81,7 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
 		}
 		if (isTripStarted && !TrackingService.ignoreLocationUpdates) {
 
-			if (ConfigurationHandler.getInstance().getConfiguration()
-					.isDisableCall()) {
+			if (TAGS.disableCall) {
 				telephonyManager = (TelephonyManager) context
 						.getSystemService(Context.TELEPHONY_SERVICE);
 				connectToTelephonyService();

@@ -213,8 +213,8 @@ public class TrackingScreenActivity extends Activity {
 			@Override
 			public void onServiceDisconnected(ComponentName name) {
 				Log.v(TAG, "Service connected");
-				Toast.makeText(TrackingScreenActivity.this,
-						"Service is disconnected", 1000).show();
+//				Toast.makeText(TrackingScreenActivity.this,
+//						"Service is disconnected", 1000).show();
 				mBounded = false;
 				trackingService = null;
 			}
@@ -222,8 +222,8 @@ public class TrackingScreenActivity extends Activity {
 			@Override
 			public void onServiceConnected(ComponentName name, IBinder service) {
 				Log.v(TAG, "Service Disconnected");
-				Toast.makeText(TrackingScreenActivity.this,
-						"Service is connected", 1000).show();
+//				Toast.makeText(TrackingScreenActivity.this,
+//						"Service is connected", 1000).show();
 				mBounded = true;
 				LocalBinder mLocalBinder = (LocalBinder) service;
 				trackingService = mLocalBinder.getServerInstance();
@@ -1292,7 +1292,7 @@ public class TrackingScreenActivity extends Activity {
 			AudioManager aManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 			aManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 
-			insertIntoSMS();
+		//insertIntoSMS();
 		} catch (Exception e) {
 			Log.e(TAG, "Exception while destroy tracking screen");
 			e.printStackTrace();

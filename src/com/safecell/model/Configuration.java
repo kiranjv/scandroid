@@ -33,9 +33,9 @@ public class Configuration {
 
 	private boolean disableEmail = true;
 
-	private boolean disableCall = true;
+	private boolean disableCall = false;
 
-	private boolean disableTexting = true;
+	private boolean disableTexting = false;
 
 	private boolean disableWeb = true;
 

@@ -36,6 +36,7 @@ import com.safecell.utilities.FlurryUtils;
 import com.safecell.utilities.LocationSP;
 import com.safecell.utilities.StateAddress;
 import com.safecell.utilities.UIUtils;
+import com.safecell.utilities.URLs;
 
 public class ViewRulesListActivity extends Activity {
 
@@ -69,6 +70,7 @@ public class ViewRulesListActivity extends Activity {
 	LinearLayout innerRuleLinearLayout;
 	LayoutInflater vi;
 	ruleListDisplyAsync displyAsync;
+	private Button faxButton;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -111,6 +113,7 @@ public class ViewRulesListActivity extends Activity {
 		homeButton = (Button) findViewById(R.id.tabBarHomeButton);
 		btnMyTrips = (Button) findViewById(R.id.tabBarMyTripsButton);
 		rulesButton = (Button) findViewById(R.id.tabBarRulesButton);
+		faxButton = (Button) findViewById(R.id.tabBarFaxButton);
 //		settingsButton = (Button) findViewById(R.id.tabBarSettingsButton);
 
 		rulesButton.setBackgroundResource(R.drawable.rules_clicked);
@@ -136,9 +139,19 @@ public class ViewRulesListActivity extends Activity {
 		
 		refreshButton = (ImageButton) findViewById(R.id.ViewRulesRefreshButton);
 
-		TabControler tabControler = new TabControler(ViewRulesListActivity.this);
+		final TabControler tabControler = new TabControler(ViewRulesListActivity.this);
 		homeButton.setOnClickListener(tabControler.getHomeTabOnClickListner());
 		btnMyTrips.setOnClickListener(tabControler.getMyTripsOnClickListner());
+		faxButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				//faxButton.setBackgroundResource(R.drawable.settings_clicked);
+				//Activity activity = ViewRulesListActivity.this;
+				//tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, ViewRulesListActivity.this);
+
+			}
+		});
 
 		displyAsync = new ruleListDisplyAsync();
 		displyAsync.execute();
