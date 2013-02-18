@@ -583,9 +583,9 @@ public class HomeScreenActivity extends ListActivity {
 
 			@Override
 			public void onClick(View v) {
-				//faxButton.setBackgroundResource(R.drawable.settings_clicked);
-				//Activity activity = HomeScreenActivity.this;
-				//tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, HomeScreenActivity.this);
+				faxButton.setBackgroundResource(R.drawable.fax_click);
+				Activity activity = HomeScreenActivity.this;
+				tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, HomeScreenActivity.this);
 
 			}
 		});

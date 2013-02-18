@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: D:\\kiran\\Android\\SafeCell\\scandroid\\src\\com\\android\\internal\\telephony\\ITelephony.aidl
+ * Original file: /media/treewalker/942EBB872EBB60C2/kiran/Android/SafeCell/scandroid/src/com/android/internal/telephony/ITelephony.aidl
  */
 package com.android.internal.telephony;
 /**
@@ -30,13 +30,13 @@ public static com.android.internal.telephony.ITelephony asInterface(android.os.I
 if ((obj==null)) {
 return null;
 }
-android.os.IInterface iin = (android.os.IInterface)obj.queryLocalInterface(DESCRIPTOR);
+android.os.IInterface iin = obj.queryLocalInterface(DESCRIPTOR);
 if (((iin!=null)&&(iin instanceof com.android.internal.telephony.ITelephony))) {
 return ((com.android.internal.telephony.ITelephony)iin);
 }
 return new com.android.internal.telephony.ITelephony.Stub.Proxy(obj);
 }
-public android.os.IBinder asBinder()
+@Override public android.os.IBinder asBinder()
 {
 return this;
 }
@@ -81,7 +81,7 @@ Proxy(android.os.IBinder remote)
 {
 mRemote = remote;
 }
-public android.os.IBinder asBinder()
+@Override public android.os.IBinder asBinder()
 {
 return mRemote;
 }
@@ -94,7 +94,7 @@ return DESCRIPTOR;
      *
      * @return whether it hung up
      */
-public boolean endCall() throws android.os.RemoteException
+@Override public boolean endCall() throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();
@@ -126,7 +126,7 @@ return _result;
      * TODO: this should be a oneway call (especially since it's called
      * directly from the key queue thread).
      */
-public void answerRingingCall() throws android.os.RemoteException
+@Override public void answerRingingCall() throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();
@@ -151,7 +151,7 @@ _data.recycle();
      *       (Actually *all* the methods here that return void can
      *       probably be oneway.)
      */
-public void silenceRinger() throws android.os.RemoteException
+@Override public void silenceRinger() throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();

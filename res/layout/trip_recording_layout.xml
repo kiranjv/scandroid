@@ -3,7 +3,7 @@
     android:id="@+id/ViewFlipper01"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@drawable/final_att_horizontal_branding" >
+    android:background="@drawable/new_horizontal_branding_reg_v2_1" >
 
     <LinearLayout
         android:id="@+id/FilperFirstView"

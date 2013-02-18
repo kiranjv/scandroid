@@ -34,7 +34,7 @@
 
 			
 
-		<Button android:background="@drawable/settings1_unclicked" android:id="@+id/tabBarFaxButton"
+		<Button android:background="@drawable/fax_unclick" android:id="@+id/tabBarFaxButton"
 			android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
 	 
 	 </LinearLayout>

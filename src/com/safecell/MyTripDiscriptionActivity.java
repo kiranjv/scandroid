@@ -210,9 +210,9 @@ public class MyTripDiscriptionActivity extends Activity {
 
 			@Override
 			public void onClick(View v) {
-			//	faxButton.setBackgroundResource(R.drawable.settings_clicked);
-			//	Activity activity = MyTripDiscriptionActivity.this;
-			//	tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, MyTripDiscriptionActivity.this);
+				faxButton.setBackgroundResource(R.drawable.fax_click);
+				Activity activity = MyTripDiscriptionActivity.this;
+				tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, MyTripDiscriptionActivity.this);
 
 			}
 		});

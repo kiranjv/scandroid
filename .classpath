@@ -2,10 +2,10 @@
 <classpath>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry kind="src" path="lib"/>
+	<classpathentry kind="lib" path="lib/ispeech-sdk-1.1-beta.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="src" path="lib"/>
-	<classpathentry kind="lib" path="D:/kiran/Android/SafeCell/scandroid/FlurryAgent.jar"/>
-	<classpathentry kind="lib" path="lib/ispeech-sdk-1.1-beta.jar"/>
+	<classpathentry kind="lib" path="lib/FlurryAgent.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

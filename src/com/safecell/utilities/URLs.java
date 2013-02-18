@@ -9,7 +9,7 @@ public class URLs {
 	public static String REMOTE_URL = "http://www.safecellapp.mobi/";
 	public static String CONFIG_URL = "http://www.safecellapp.mobi/api/1/configcompany/";
 	public static String EMERGENCY_URL = "http://www.safecellapp.mobi/api/1/emergencynum/";
-	public static String FAX_URL = "http://www.safecellapp.mobi/api/1/site_setting/terms_of_service.html";
+	public static String FAX_URL = "http://www.safecellapp.mobi/api/1/site_setting/androidfaqs.html";
 //	public static String REMOTE_URL = "http://192.168.1.102:3000/";
 //	public static String CONFIG_URL = "http://192.168.1.102:3000/api/1/configcompany/";
 //	public static String EMERGENCY_URL = "http://192.168.1.102:3000/api/1/emergencynum/";

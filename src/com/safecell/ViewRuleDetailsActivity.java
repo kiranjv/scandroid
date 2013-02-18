@@ -64,9 +64,9 @@ public class ViewRuleDetailsActivity extends Activity{
 
 			@Override
 			public void onClick(View v) {
-				//faxButton.setBackgroundResource(R.drawable.settings_clicked);
-				//Activity activity = ViewRuleDetailsActivity.this;
-				//tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, ViewRuleDetailsActivity.this);
+				faxButton.setBackgroundResource(R.drawable.fax_click);
+				Activity activity = ViewRuleDetailsActivity.this;
+				tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, ViewRuleDetailsActivity.this);
 
 			}
 		});

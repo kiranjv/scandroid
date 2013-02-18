@@ -156,13 +156,13 @@ public class TabControler {
 
 		builder = new AlertDialog.Builder(mContext);
 		builder.setView(layout);
-		builder.setTitle("Fax");
+		builder.setTitle("FAQ");
 
 		builder.setPositiveButton("Close",
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
 						Button faxButton = (Button) activity.findViewById(R.id.tabBarFaxButton);
-						faxButton.setBackgroundResource(R.drawable.settings_unclicked);
+						faxButton.setBackgroundResource(R.drawable.fax_unclick);
 						dialog.cancel();
 					}
 				});

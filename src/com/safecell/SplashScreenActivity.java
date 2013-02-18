@@ -943,7 +943,12 @@ public class SplashScreenActivity extends Activity implements Runnable,
 		if (progressDialog != null && progressDialog.isShowing()) {
 			progressDialog.dismiss();
 		}
+		try {
 		alertDialogForTermsConditions.show();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void CallingActivity(int to) {
