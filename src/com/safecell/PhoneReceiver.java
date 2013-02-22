@@ -210,8 +210,8 @@ public class PhoneReceiver extends BroadcastReceiver {
 	}
 
 	private void sendmessage(String destinationAddress) {
-		String senderMessage = "The person was in driving and will receive your message upon reaching their destination.";
-		sendSMS(destinationAddress, senderMessage);
+		//String senderMessage = "The person was in driving and will receive your message upon reaching their destination.";
+		sendSMS(destinationAddress, TAGS.AUTO_REPLY);
 	}
 
 	/**

@@ -12,6 +12,8 @@ public class TAGS {
 	public static final String TAG = "SafeCell";
 
 	public static final String TAG_INACTIVE = "Your account is inactive. Please call customer service at 1-800-XXX-XXXX to active you account or go to www.safecellapp.mobi with controller account and edit your profile.";
+	
+	public static final String AUTO_REPLY = "The person you are trying to reach is intransit and will contact you upon reaching their destination.";
 
 	public static String license_expire_date;
 

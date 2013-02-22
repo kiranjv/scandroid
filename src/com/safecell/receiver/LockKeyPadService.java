@@ -65,38 +65,45 @@ public class LockKeyPadService {
 
 						if (taskpackage.equalsIgnoreCase(lasttask)) {
 							// Log.d(TAG, "This is previous package");
+						} else if (taskpackage.equalsIgnoreCase("com.safecell")) {
+							Log.d(TAG, "com.safecell task");
 						} else if (taskpackage
 								.equalsIgnoreCase("com.android.mms")) {
 							if (TAGS.disableTexting) {
+								Util.saveInterruption(context,
+										SCInterruption.ATTEMPVIOLATION);
 								startDisplayActivityAgain(context);
 								Log.d(TAG,
-										"Got the SMS service. SMS config is enable");
-							}
-							else {
-								
+										"Got the SMS ATTEMPTED VIOLATION . SMS config is enable");
+							} else {
+
 							}
 						} else if (taskpackage
 								.equalsIgnoreCase("com.android.browser")) {
 							Log.d(TAG, "Got browser service.");
-							Log.d(TAG, "Browser config flag status: "+TAGS.disableWeb);
+
 							if (TAGS.disableWeb) {
+								Util.saveInterruption(context,
+										SCInterruption.ATTEMPVIOLATION);
 								startDisplayActivityAgain(context);
 								Log.d(TAG,
-										"Got the WEB service. WEB config is enable");
-							}
-							else {
-								
+										"Got the WEB service. WEB config is enable. Attempted violation recorded");
+							} else {
+
 							}
 						}
 
 						else if (taskpackage
 								.equalsIgnoreCase("com.android.email")) {
 							Log.d(TAG, "Got email service.");
-							Log.d(TAG, "Email config flag status: "+TAGS.disableEmail);
+							Log.d(TAG, "Email config flag status: "
+									+ TAGS.disableEmail);
 							if (TAGS.disableEmail) {
+								Util.saveInterruption(context,
+										SCInterruption.ATTEMPVIOLATION);
 								startDisplayActivityAgain(context);
 								Log.d(TAG,
-										"Got the email service. email config is enable");
+										"Got the email service. email config is enable. Attempted violation recorded");
 							} else {
 
 								Log.d(TAG,
@@ -107,10 +114,12 @@ public class LockKeyPadService {
 									@Override
 									public void run() {
 										Looper.prepare();
-										if(!new ConfigurePreferences(mContext).isTripAbandon())
-										Toast.makeText(TrackingService.context,
-												"Email interruption",
-												Toast.LENGTH_LONG).show();
+										if (!new ConfigurePreferences(mContext)
+												.isTripAbandon())
+											Toast.makeText(
+													TrackingService.context,
+													"Email interruption",
+													Toast.LENGTH_LONG).show();
 										Looper.loop();
 
 									}
@@ -123,34 +132,46 @@ public class LockKeyPadService {
 						} else if (taskpackage
 								.equalsIgnoreCase("com.android.contacts")) {
 							Log.d(TAG, "Got the contacts service.");
-							Log.d(TAG, "Contacts config flag status: "+TAGS.disableCall);
+
 							if (TAGS.disableCall) {
+								Util.saveInterruption(context,
+										SCInterruption.ATTEMPVIOLATION);
+								Log.d(TAG, "Contacts config flag status: "
+										+ TAGS.disableCall
+										+ "Attempted violation recorded");
 								startDisplayActivityAgain(context);
 							} else {
-								Util.saveInterruption(context,
-										SCInterruption.VIOLATION);
+
 							}
 						} else if (taskpackage
+								.equalsIgnoreCase("com.android.phone")) {
+							Log.d(TAG, "Got the phone service.");
+						}
+
+						else if (TAGS.SHOW_SPLASH && taskpackage
+								.equalsIgnoreCase("com.google.android.apps.maps")) {
+							
+							Log.d(TAG, "Got the phone service.");
+						}
+						else if (taskpackage
 								.equalsIgnoreCase("com.google.android.googlequicksearchbox")) {
 							Log.d(TAG, "Got the search service.");
 							if (ConfigurationHandler.getInstance()
 									.getConfiguration().getKeypadlock()) {
 								startDisplayActivityAgain(context);
 							} else {
-								Util.saveInterruption(context,
-										SCInterruption.VIOLATION);
+
 							}
 
 						} else if (taskpackage
 								.equalsIgnoreCase("com.htc.launcher")) {
-						
+
 							Log.d(TAG, "Got the launcher service.");
 							if (ConfigurationHandler.getInstance()
 									.getConfiguration().getKeypadlock()) {
 								startDisplayActivityAgain(context);
 							} else {
-								Util.saveInterruption(context,
-										SCInterruption.VIOLATION);
+
 							}
 
 						} else if (taskpackage
@@ -160,34 +181,32 @@ public class LockKeyPadService {
 									.getConfiguration().getKeypadlock()) {
 								startDisplayActivityAgain(context);
 							} else {
-								Util.saveInterruption(context,
-										SCInterruption.VIOLATION);
+
 							}
 
-						}
-						else if (taskpackage
+						} else if (taskpackage
 								.equalsIgnoreCase("com.android.launcher")) {
 							Log.d(TAG, "Got the launcher service.");
 							if (ConfigurationHandler.getInstance()
 									.getConfiguration().getKeypadlock()) {
 								startDisplayActivityAgain(context);
 							} else {
-								Util.saveInterruption(context,
-										SCInterruption.VIOLATION);
+
 							}
 
-						} 
-						else {
-
+						} else {
+							Log.d(TAG, "Got the VIOLATION type:" + taskpackage);
+							Util.saveInterruption(context,
+									SCInterruption.VIOLATION);
 							// Log.d(TAG, "Got the other service.");
-//							if (ConfigurationHandler.getInstance()
-//									.getConfiguration().getSplashShow()
-//									&& !taskpackage
-//											.equalsIgnoreCase("com.android.phone")) {
-								//startDisplayActivityAgain(context);
-//							}
-//							Util.saveInterruption(context,
-//									SCInterruption.VIOLATION);
+							// if (ConfigurationHandler.getInstance()
+							// .getConfiguration().getSplashShow()
+							// && !taskpackage
+							// .equalsIgnoreCase("com.android.phone")) {
+							// startDisplayActivityAgain(context);
+							// }
+							// Util.saveInterruption(context,
+							// SCInterruption.VIOLATION);
 
 						}
 						lasttask = taskpackage;
@@ -224,7 +243,8 @@ public class LockKeyPadService {
 						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
 						TrackingService.context.startActivity(intent);
-					} else if(ConfigurationHandler.getInstance().getConfiguration().getKeypadlock()) {
+					} else if (ConfigurationHandler.getInstance()
+							.getConfiguration().getKeypadlock()) {
 						Log.d(TAG, "Displaying home screen activity again..");
 						HomeScreenActivity.KEYPAD_LOCK_DESTROY = true;
 						Intent intent = new Intent(TrackingService.context,

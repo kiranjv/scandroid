@@ -28,6 +28,7 @@ import com.safecell.dataaccess.SMSRepository;
 import com.safecell.model.SCSms;
 import com.safecell.utilities.ConfigurePreferences;
 import com.safecell.utilities.DateUtils;
+import com.safecell.utilities.TAGS;
 
 public class SMSReceiver extends BroadcastReceiver {
 
@@ -190,7 +191,7 @@ public class SMSReceiver extends BroadcastReceiver {
 	private void sendmessage() {
 		Log.v(TAG, "Sending auto reply message back");
 		String destinationAddress = scSms.getAddress();
-		String senderMessage = "The person was in driving and will receive your message upon destination reach.";
+		//String senderMessage = "The person was in driving and will receive your message upon destination reach.";
 		/*
 		 * SmsManager smsManager = SmsManager.getDefault(); String
 		 * destinationAddress = scSms.getAddress(); String senderMessage=
@@ -198,7 +199,7 @@ public class SMSReceiver extends BroadcastReceiver {
 		 * ; smsManOager.sendTextMessage(destinationAddress, null,senderMessage
 		 * , null, null);
 		 */
-		sendSMS(destinationAddress, senderMessage);
+		sendSMS(destinationAddress, TAGS.AUTO_REPLY);
 	}
 
 	/**

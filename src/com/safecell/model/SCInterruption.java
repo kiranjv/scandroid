@@ -17,6 +17,8 @@ public class SCInterruption {
 	public static final String EMEI = "EMEI";
 
 	public static final String VIOLATION = "VIOLATION";
+	
+	public static final String ATTEMPVIOLATION = "ATTEMPTED VIOLATION";
 
 	/*
 	 * private boolean terminated_app = false; private String started_at;

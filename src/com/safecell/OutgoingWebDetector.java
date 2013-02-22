@@ -24,6 +24,7 @@ package com.safecell;
 import com.safecell.model.SCInterruption;
 import com.safecell.networking.ConfigurationHandler;
 import com.safecell.utilities.ConfigurePreferences;
+import com.safecell.utilities.TAGS;
 import com.safecell.utilities.Util;
 
 import android.content.ContentResolver;
@@ -69,8 +70,7 @@ public class OutgoingWebDetector extends ContentObserver {
 	public void onChange(boolean selfChange) {
 		super.onChange(selfChange);
 		Log.d(TAG, "Web detected ");
-		if (!ConfigurationHandler.getInstance().getConfiguration()
-				.isDisableWeb()) {
+		if (!TAGS.disableWeb) {
 			if (!new ConfigurePreferences(mContext).isTripAbandon()) {
 				Toast.makeText(mContext, "WEB interruption", Toast.LENGTH_LONG)
 						.show();

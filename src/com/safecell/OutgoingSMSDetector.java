@@ -24,6 +24,7 @@ package com.safecell;
 import com.safecell.model.SCInterruption;
 import com.safecell.networking.ConfigurationHandler;
 import com.safecell.utilities.ConfigurePreferences;
+import com.safecell.utilities.TAGS;
 import com.safecell.utilities.Util;
 
 import android.content.ContentResolver;
@@ -75,8 +76,7 @@ public class OutgoingSMSDetector extends ContentObserver {
 	public void onChange(boolean selfChange) {
 		super.onChange(selfChange);
 		if (isOutgoingSms()) {
-			if (!ConfigurationHandler.getInstance().getConfiguration()
-					.isDisableTexting()) {
+			if (!TAGS.disableTexting) {
 				if (!new ConfigurePreferences(mContext).isTripAbandon()) {
 					Log.d(TAG, "Got the SMS service. SMS config is disable");
 					Toast.makeText(mContext, "SMS Interruption",
@@ -105,7 +105,7 @@ public class OutgoingSMSDetector extends ContentObserver {
 			String protocol = cursor.getString(cursor
 					.getColumnIndex("protocol"));
 			int type = cursor.getInt(cursor.getColumnIndex("type"));
-			Log.d(TAG, "Type = " + type);
+			Log.e(TAG, "SMS Type = " + type);
 			// Only processing outgoing sms event & only when it
 			// is sent successfully (available in SENT box).
 			if (protocol != null || type != MESSAGE_TYPE_SENT) {

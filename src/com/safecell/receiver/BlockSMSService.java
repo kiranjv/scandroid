@@ -8,11 +8,14 @@ import android.util.Log;
 
 import com.safecell.TrackingScreenActivity;
 import com.safecell.TrackingService;
+import com.safecell.model.SCInterruption;
 import com.safecell.networking.ConfigurationHandler;
 import com.safecell.utilities.ConfigurePreferences;
+import com.safecell.utilities.TAGS;
+import com.safecell.utilities.Util;
 
 public class BlockSMSService {
-	private final static String TAG = LockKeyPadService.class.getSimpleName();
+	private final static String TAG = BlockSMSService.class.getSimpleName();
 	private static boolean lock_status = false;
 	private final static long MONITER_TIMER = 500;
 
@@ -45,8 +48,13 @@ public class BlockSMSService {
 
 						if (taskpackage.equalsIgnoreCase("com.android.mms")) {
 
-							startDisplayActivityAgain(context);
-							Log.d(TAG, "Outbound SMS is blocked.");
+							if (TAGS.disableTexting) {
+								Util.saveInterruption(context,
+										SCInterruption.ATTEMPVIOLATION);
+								startDisplayActivityAgain(context);
+								Log.d(TAG,
+										"Got the SMS ATTEMPTED VIOLATION . SMS config is enable");
+							}
 
 						}
 

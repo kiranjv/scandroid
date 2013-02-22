@@ -377,14 +377,14 @@ public class TrackingService extends Service implements LocationListener,
 		TrackingService.isTripRunning = true;
 
 		// start the observer based on configuration
-		if (ConfigurationHandler.getInstance().getConfiguration()
-				.isDisableTexting()
-				&& mSmsDetector != null) {
+		if (mSmsDetector != null) {
 
-			if (!BlockSMSService.isSMSBlocked()
-					&& ConfigurationHandler.getInstance().getConfiguration()
-							.getSplashShow()
+			if (ConfigurationHandler.getInstance().getConfiguration()
+					.isDisableTexting()
+					&& !BlockSMSService.isSMSBlocked()
 					&& !ConfigurationHandler.getInstance().getConfiguration()
+							.getSplashShow()
+					&& ConfigurationHandler.getInstance().getConfiguration()
 							.getKeypadlock()) {
 				Log.v(TAG, "Activationg SMS blocking service");
 				BlockSMSService.activateSMSBlock(context, true);
@@ -398,7 +398,7 @@ public class TrackingService extends Service implements LocationListener,
 			Log.v(TAG, "Activating WEB Dectector");
 			mWebDetector.start();
 		}
-		if (ConfigurationHandler.getInstance().getConfiguration()
+		if (!ConfigurationHandler.getInstance().getConfiguration()
 				.isDisableEmail()
 				&& mEmailDetector != null) {
 			Log.v(TAG, "Activating EMail Dectector");
