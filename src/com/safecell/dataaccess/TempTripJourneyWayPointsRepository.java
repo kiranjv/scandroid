@@ -309,7 +309,7 @@ public class TempTripJourneyWayPointsRepository extends DBAdapter {
 		double totalDistance = 0;
 		double averageSpeed = 0;
 
-		String query = "SELECT distance, timestamp, waypoint_id FROM temp_trip_journey_waypoints order by waypoint_id desc limit(5)";
+		String query = "SELECT distance, timestamp, waypoint_id FROM temp_trip_journey_waypoints order by waypoint_id desc limit(12)";
 		String args[] = {};
 		Cursor cursor = this.selectQuery(query, args);
 

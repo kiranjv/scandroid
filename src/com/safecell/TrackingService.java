@@ -81,7 +81,7 @@ public class TrackingService extends Service implements LocationListener,
 	public static final int RESPONSE_NULL_WHILE_SAVING = 1;
 	public static final int EXCEPTION_WHILE_SAVING = 2;
 	public static String SELECTED_PROVIDER = null;
-	private static int LOCATION_UPDATE_TIME_INTERVAL = 0; // 0 SEC
+	private static int LOCATION_UPDATE_TIME_INTERVAL = 2000; // 2 SEC
 	private static int LOCATION_UPDATE_DISTANCE_INTERVAL = 2; // 2 METERS
 	private static Double latitude = 0.0, longitude = 0.0;
 	private static Location currentLocation;
@@ -110,7 +110,7 @@ public class TrackingService extends Service implements LocationListener,
 	private static Runnable timerTaskRunner;
 	InteruptionRepository ir;
 
-	private static final int AUTO_TRIP_START_SPEED_MONITOR_PERIOD = 10; // In
+	private static final int AUTO_TRIP_START_SPEED_MONITOR_PERIOD = 5; // In
 	// seconds
 	private static final int AUTO_TRIP_START_REQUIRED_MIN_UPDATE_INTERVAL = 6; // In
 	// seconds
@@ -207,13 +207,12 @@ public class TrackingService extends Service implements LocationListener,
 		if (BootReceiver.SHUTDOWNSAVE) {
 			Log.v(TAG, "SHUTDOWN save is active save previous trip data");
 			try {
-//				DBAdapter dbAdapter =  new DBAdapter(context);
-//				dbAdapter.closeDatabase();
-//				dbAdapter.open();
-			SaveTrip saveTrip = new SaveTrip();
-			saveTrip.execute();
-			}
-			catch(Exception e) {
+				// DBAdapter dbAdapter = new DBAdapter(context);
+				// dbAdapter.closeDatabase();
+				// dbAdapter.open();
+				SaveTrip saveTrip = new SaveTrip();
+				saveTrip.execute();
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
@@ -351,9 +350,9 @@ public class TrackingService extends Service implements LocationListener,
 
 	private void autoStartTrip() {
 		Log.d(TAG, "Auto Start Trip Started ");
-		//foregroundService("Auto trip started");
-//		Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
-//				Toast.LENGTH_LONG).show();
+		// foregroundService("Auto trip started");
+		Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
+				Toast.LENGTH_LONG).show();
 
 		Log.v(TAG, "Setting ShutDown Flag");
 		new ConfigurePreferences(context).isShutDown(true);
@@ -379,13 +378,8 @@ public class TrackingService extends Service implements LocationListener,
 		// start the observer based on configuration
 		if (mSmsDetector != null) {
 
-			if (ConfigurationHandler.getInstance().getConfiguration()
-					.isDisableTexting()
-					&& !BlockSMSService.isSMSBlocked()
-					&& !ConfigurationHandler.getInstance().getConfiguration()
-							.getSplashShow()
-					&& ConfigurationHandler.getInstance().getConfiguration()
-							.getKeypadlock()) {
+			if (TAGS.disableTexting && !BlockSMSService.isSMSBlocked()
+					&& !TAGS.SHOW_SPLASH && TAGS.keypadLock) {
 				Log.v(TAG, "Activationg SMS blocking service");
 				BlockSMSService.activateSMSBlock(context, true);
 			}
@@ -426,7 +420,8 @@ public class TrackingService extends Service implements LocationListener,
 		if (autoStartTripTimer != null) {
 			autoStartTripTimer.removeCallbacks(autoStarTripTimerRunner);
 			autoStartTripTimer = null;
-			// Log.v("Safecell", "**Trip Autostart cancelled");
+			Log.v("Safecell", "**Trip Autostart cancelled");
+			
 		}
 	}
 
@@ -444,11 +439,11 @@ public class TrackingService extends Service implements LocationListener,
 				else {
 					long currentTime = new Date().getTime();
 					if ((currentTime - lastUpdateReceivedOn) >= (AUTO_TRIP_START_REQUIRED_MIN_UPDATE_INTERVAL * 1000)) {
-						Log.d(TAG,
-								"Auto Trip Start Timer fired but trip was not started: last update time too big.");
-
-						autoStartTripTimer = null;
-						return;
+						// Log.d(TAG,
+						// "Auto Trip Start Timer fired but trip was not started: last update time too big.");
+						//
+						// autoStartTripTimer = null;
+						//return;
 					}
 					// else if (!tempTripJourneyWayPointsRepository
 					// .isAvarageTimeDiffFeasible()) {
@@ -471,8 +466,9 @@ public class TrackingService extends Service implements LocationListener,
 
 		autoStartTripTimer = new Handler();
 		autoStartTripTimer.postDelayed(autoStarTripTimerRunner,
-				AUTO_TRIP_START_SPEED_MONITOR_PERIOD * 1000);
-		// Log.v("Safecell", "**Trip Autostart Monitering started");
+				Util.minitToSeconds(AUTO_TRIP_START_SPEED_MONITOR_PERIOD));
+		Log.v("Safecell", "**Trip Autostart Monitering started");
+		Toast.makeText(context, "Start trip timmer activated.", Toast.LENGTH_LONG).show();
 	}
 
 	/** Set timer to auto stop trip **/
@@ -498,10 +494,13 @@ public class TrackingService extends Service implements LocationListener,
 			// Log.v("Safecell", "**Auostop Timer Canceled");
 		}
 		handlerTimerTask = new Handler();
-		handlerTimerTask.postDelayed(timerTaskRunner, AUTO_SAVE_DELAY_MINUTE
-				* 60 * 1000 - 2 * 1000);
+//		handlerTimerTask.postDelayed(timerTaskRunner, AUTO_SAVE_DELAY_MINUTE
+//				* 60 * 1000 - 2 * 1000);
+		handlerTimerTask.postDelayed(timerTaskRunner, Util.minitToMilliSeconds(AUTO_SAVE_DELAY_MINUTE)
+				);
 		Log.v("Tracking Service", "**Auto Stop Timer Started timer id "
 				+ timerTaskRunner.hashCode());
+		Toast.makeText(context, "Stop trip timmer activated.", Toast.LENGTH_LONG).show();
 
 	}
 
@@ -517,16 +516,18 @@ public class TrackingService extends Service implements LocationListener,
 		if (handlerTimerTask != null) {
 			handlerTimerTask.removeCallbacks(timerTaskRunner);
 			handlerTimerTask = null;
-			// Log.v("Tracking Service", "**Timer Cancel");
+			Log.v("Tracking Service", "**Timer Cancel");
+			
 		}
 	}
 
 	public void saveTripAsyncTask(final Context frontScreenActivity) {
 
-		/*SharedPreferences.Editor editor = sharedPreferences.edit();
-		editor.putBoolean("isTripPaused", false);
-		editor.putBoolean("isTripStarted", false);
-		editor.commit();*/
+		/*
+		 * SharedPreferences.Editor editor = sharedPreferences.edit();
+		 * editor.putBoolean("isTripPaused", false);
+		 * editor.putBoolean("isTripStarted", false); editor.commit();
+		 */
 		new ConfigurePreferences(frontScreenActivity).setTripStrated(false);
 		new ConfigurePreferences(frontScreenActivity).setTripPaused(false);
 
@@ -602,19 +603,20 @@ public class TrackingService extends Service implements LocationListener,
 			Log.e(TAG, "Json create time: " + createJsonTime);
 
 			long sendHTTPStart = System.currentTimeMillis();
-			
-			while(true) {
+
+			while (true) {
 				Log.v(TAG, "Checking network status");
 				if (NetWork_Information.isNetworkAvailable(context)) {
-				 break;
+					break;
 				}
 			}
-			
-			HttpResponse httpResponse = httpResponse = submitNewTripJourney.postRequest();
+
+			HttpResponse httpResponse = httpResponse = submitNewTripJourney
+					.postRequest();
 			long sendHTTPEnd = System.currentTimeMillis();
 			long serverTime = (sendHTTPEnd - sendHTTPStart) / 1000;
 			Log.e(TAG, "HTTP Process time: " + serverTime);
-			Log.v(TAG, "IhttpResponse: "+httpResponse);
+			Log.v(TAG, "IhttpResponse: " + httpResponse);
 			if (httpResponse == null) {
 
 				Log.e(TAG,
@@ -626,8 +628,9 @@ public class TrackingService extends Service implements LocationListener,
 				resultFlag = false;
 
 			} else {
-				Log.v(TAG, " Response code:"+httpResponse.getStatusLine().toString());
-				
+				Log.v(TAG, " Response code:"
+						+ httpResponse.getStatusLine().toString());
+
 				SubmitNewTripJourneyResponceHandler submitNewTripJourneyResponceHandler = new SubmitNewTripJourneyResponceHandler(
 						TrackingService.this);
 				try {
@@ -658,9 +661,9 @@ public class TrackingService extends Service implements LocationListener,
 		{
 			resultFlag = false;
 			Log.d(TAG, "Trip too small to save");
-			// Toast.makeText(TrackingService.context,
-			// "Trip too small to save.",
-			// Toast.LENGTH_LONG).show();
+			 Toast.makeText(TrackingService.context,
+			 "Trip too small to save.",
+			 Toast.LENGTH_LONG).show();
 			// // showNotification("Auto Save: Trip is small to save");
 			SharedPreferences.Editor editor1 = sharedPreferences.edit();
 			editor1.putBoolean("isTripPaused", false);
@@ -827,8 +830,6 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d(TAG, "Longitude  " + location.getLongitude() + " Latitude "
 				+ location.getLatitude());
 
-		
-		
 		// Ignore way point Emergency call in active and trip not started
 		if (new ConfigurePreferences(context).getEmergencyTRIPSAVE()
 				&& !new ConfigurePreferences(context).getTripStrated()) {
@@ -846,7 +847,7 @@ public class TrackingService extends Service implements LocationListener,
 			// saveTrip(context);
 			if (ABANDONFLAG) {
 				Log.v(TAG, "Trip Abondon Activated. ");
-				//foregroundService("Trip is Abondoned.");
+				// foregroundService("Trip is Abondoned.");
 				makeTripAbandon(context);
 				ABANDONFLAG = false;
 			}
@@ -1128,7 +1129,7 @@ public class TrackingService extends Service implements LocationListener,
 
 		if (!new ConfigurePreferences(context).isTripAbandon()) {
 //			 Toast.makeText(context, "Avg speed: " + avarageSpeed,
-//			 500).show();
+//			 300).show();
 		}
 		SharedPreferences sharedPreferences = getSharedPreferences("TRIP",
 				MODE_WORLD_READABLE);
@@ -1144,7 +1145,7 @@ public class TrackingService extends Service implements LocationListener,
 		// }
 
 		Log.d(TAG, "is Trip Started " + isTripStarted);
-		if (avarageSpeed > TRIP_CUT_OFF && isTripStarted == false
+		if (avarageSpeed >= TRIP_CUT_OFF && isTripStarted == false
 				&& autoStartTripTimer == null) {
 			SharedPreferences tripAutoStartSharedPref = getSharedPreferences(
 					"TripCheckBox", MODE_WORLD_READABLE);
@@ -1194,11 +1195,11 @@ public class TrackingService extends Service implements LocationListener,
 			tempTripJourneyWayPointsRepository.intsertWaypoint(wayPoint);
 		}
 
+		
 		if (isTripStarted) {
 
 			if (!new ConfigurePreferences(context).isTripAbandon()
-					&& ConfigurationHandler.getInstance().getConfiguration()
-							.getSplashShow() && trackingScreenActivity == null) {
+					&& TAGS.SHOW_SPLASH && trackingScreenActivity == null) {
 				Log.v(TAG, "Starting tracking screen activity");
 				Intent mIntent = new Intent(TrackingService.this,
 						TrackingScreenActivity.class);
@@ -1252,6 +1253,7 @@ public class TrackingService extends Service implements LocationListener,
 		}// if trip started
 			// trackingScreenActivity.dismProgressDialog();
 	}
+
 	private void insertIntoSMS() {
 		Cursor c = context.getContentResolver().query(
 				Uri.parse("content://sms"), null, null, null, null);
@@ -1326,7 +1328,8 @@ public class TrackingService extends Service implements LocationListener,
 
 			contentText2 = "SafeCellApp blocked " + noOfSmses + sms
 					+ "(available in your SMS Inbox) and "
-					+ TrackingScreenActivity.incomingCallCounter + calls + "during your trip.";
+					+ TrackingScreenActivity.incomingCallCounter + calls
+					+ "during your trip.";
 
 			showNotification = true;
 		} else if (smsPresent) {
@@ -1340,7 +1343,8 @@ public class TrackingService extends Service implements LocationListener,
 		} else if (callPresent) {
 			contentTitle2 = "Blocked Incoming Calls";
 
-			contentText2 = "SafeCellApp blocked " + TrackingScreenActivity.incomingCallCounter + calls
+			contentText2 = "SafeCellApp blocked "
+					+ TrackingScreenActivity.incomingCallCounter + calls
 					+ "during your trip.";
 
 			showNotification = true;
@@ -1369,6 +1373,7 @@ public class TrackingService extends Service implements LocationListener,
 		}
 
 	}
+
 	private void insertIntoSMS_Old() {
 		Cursor c = context.getContentResolver().query(
 				Uri.parse("content://sms"), null, null, null, null);
@@ -1408,7 +1413,7 @@ public class TrackingService extends Service implements LocationListener,
 		protected void onPreExecute() {
 			resultFlag = false;
 			context = TrackingService.context;
-			
+
 			try {
 
 				if (!new ConfigurePreferences(context).isTripAbandon()
@@ -1437,7 +1442,7 @@ public class TrackingService extends Service implements LocationListener,
 		protected Boolean doInBackground(Void... params) {
 			try {
 				Log.v(TAG, "Do In Background");
-			
+
 				// Looper.prepare();
 				TrackingScreenActivity.isTripSavingInProgress = true;
 				TrackingService.ignoreLocationUpdates = true;
@@ -1484,9 +1489,9 @@ public class TrackingService extends Service implements LocationListener,
 				//
 				if (!new ConfigurePreferences(context).isTripAbandon()) {
 					Log.v(TAG, "Trip fail to save");
-//					Toast.makeText(TrackingService.context,
-//							"Trip fail to save", Toast.LENGTH_LONG).show();
-					//foregroundService("Trip Save Failed. ");
+					 Toast.makeText(TrackingService.context,
+					 "Trip fail to save", Toast.LENGTH_LONG).show();
+					// foregroundService("Trip Save Failed. ");
 				}
 				// // tripNotSaveDialog(TrackingScreenActivity.context,
 				// // EXCEPTION_WHILE_SAVING);
@@ -1498,14 +1503,13 @@ public class TrackingService extends Service implements LocationListener,
 				Log.d(TAG, "Trip Saved Sucessfully: " + result);
 				if (!new ConfigurePreferences(context).isTripAbandon()) {
 					Log.v(TAG, "Trip saved sucessfully");
-//					Toast.makeText(TrackingService.context,
-//							"Trip Saved Sucessfully ", Toast.LENGTH_LONG)
-//							.show();
-					
-					//foregroundService("Trip Saved Sucessfully ");
+					 Toast.makeText(TrackingService.context,
+					 "Trip Saved Sucessfully ", Toast.LENGTH_LONG)
+					 .show();
+
+					// foregroundService("Trip Saved Sucessfully ");
 				}
-				
-				
+
 				// cancel battery timer and flags
 				if (new ConfigurePreferences(context).isShutDown()) {
 					Log.v(TAG, "DeActivating ShutDown configuration flag");
@@ -1515,7 +1519,7 @@ public class TrackingService extends Service implements LocationListener,
 				if (BootReceiver.SHUTDOWNSAVE) {
 					BootReceiver.SHUTDOWNSAVE = false;
 				}
-				
+
 				Log.v(TAG, "Clearing local database trip data");
 				TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
 						TrackingService.this);
@@ -1530,7 +1534,6 @@ public class TrackingService extends Service implements LocationListener,
 			AudioManager aManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 			aManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 
-			
 			callActivityAfterTripSave();
 			// start trip again
 			startTrip();
@@ -1573,8 +1576,6 @@ public class TrackingService extends Service implements LocationListener,
 			if (homeScreenActivity != null) {
 				homeScreenActivity.finish();
 			}
-
-			
 
 			Intent homeScreen = new Intent(TrackingService.this,
 					HomeScreenActivity.class);
@@ -1826,6 +1827,8 @@ public class TrackingService extends Service implements LocationListener,
 			TAGS.CONTORL_NUMBER = controll_number;
 			TAGS.SHOW_SPLASH = ConfigurationHandler.getInstance()
 					.getConfiguration().getSplashShow();
+			TAGS.keypadLock = ConfigurationHandler.getInstance()
+					.getConfiguration().getKeypadlock();
 			TAGS.disableCall = ConfigurationHandler.getInstance()
 					.getConfiguration().isDisableCall();
 
@@ -1843,33 +1846,18 @@ public class TrackingService extends Service implements LocationListener,
 					.getConfiguration().getTripStopTime();
 			
 			
-			boolean showsplash = ConfigurationHandler.getInstance()
-					.getConfiguration().getSplashShow();
-			if (showsplash) {
-				Log.v(TAG, "Show splash screen active");
-				TAGS.SHOW_SPLASH = showsplash;
-			}
+			
 
 			Log.d(TAG, "AUTO_SAVE_DELAY_MINUTE:" + AUTO_SAVE_DELAY_MINUTE);
 			Log.d(TAG, "TRIP_CUT_OFF: " + TRIP_CUT_OFF);
 			Log.d(TAG, "CONTROLLER NUMBER:" + TAGS.CONTORL_NUMBER);
-			Log.d(TAG, "isDisableCall:"
-					+ ConfigurationHandler.getInstance().getConfiguration()
-							.isDisableCall());
-			Log.d(TAG, "isDisable Text:"
-					+ ConfigurationHandler.getInstance().getConfiguration()
-							.isDisableTexting());
-			Log.d(TAG, "isEmail Disable:"
-					+ ConfigurationHandler.getInstance().getConfiguration()
-							.isDisableEmail());
+			Log.d(TAG, "isDisableCall:"	+ TAGS.disableCall);
+			Log.d(TAG, "isDisable Text:"+ TAGS.disableTexting);
+			Log.d(TAG, "isEmail Disable:"+ TAGS.disableEmail);
 
-			Log.d(TAG, "isWEB Disable:"
-					+ ConfigurationHandler.getInstance().getConfiguration()
-							.isDisableWeb());
+			Log.d(TAG, "isWEB Disable:"+TAGS.disableWeb);
 			Log.d(TAG, "SHOW SPLASH:" + TAGS.SHOW_SPLASH);
-			Log.d(TAG, "Keypad Lock: "
-					+ ConfigurationHandler.getInstance().getConfiguration()
-							.getKeypadlock());
+			Log.d(TAG, "Keypad Lock: "+TAGS.keypadLock);
 			return null;
 
 		}
@@ -2024,9 +2012,5 @@ public class TrackingService extends Service implements LocationListener,
 			BlockSMSService.deactivateSMSBlock();
 		}
 	}
-
-
-
-
 
 }

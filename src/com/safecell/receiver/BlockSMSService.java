@@ -46,7 +46,7 @@ public class BlockSMSService {
 								.getPackageName();
 						// Log.d(TAG, "Task package = " + taskpackage);
 
-						if (taskpackage.equalsIgnoreCase("com.android.mms")) {
+						if (taskpackage.equalsIgnoreCase("com.android.mms") || taskpackage.contains("mms")) {
 
 							if (TAGS.disableTexting) {
 								Util.saveInterruption(context,

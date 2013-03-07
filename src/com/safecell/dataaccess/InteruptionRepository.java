@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
+import java.util.StringTokenizer;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -116,6 +117,12 @@ public class InteruptionRepository extends DBAdapter {
 					// Log.v("Safecell :"+"InterPepo Cursor ","Started at= "+startedAt+" Ended At= "+endedAt);
 					estimated_speed = cursor.getDouble(7);
 
+					String category = getViolationCategory(school_zone_flag);
+					String interruption_type = " ";
+					//if(school_zone_flag.contains("-"))
+					//{
+					 interruption_type = school_zone_flag;
+					//}
 					interuptionJSONObject = new JSONObject();
 					interuptionJSONObject.put("terminated_app", isTerminated);
 					interuptionJSONObject.put("started_at", startedAt);
@@ -124,11 +131,12 @@ public class InteruptionRepository extends DBAdapter {
 					interuptionJSONObject.put("ended_at", endedAt);
 					interuptionJSONObject.put("paused", isPaused);
 					interuptionJSONObject.put("estimated_speed", estimated_speed);
-					interuptionJSONObject.put("school_zone_flag", school_zone_flag);
+					interuptionJSONObject.put("school_zone_flag",category );
 					interuptionJSONObject.put("sms_rule_flag", sms_rule_flag);
 					interuptionJSONObject.put("phone_rule_flag", phone_rule_flag);
-					interuptionJSONObject.put("type", type);
-					Log.d(TAG, "Type = "+type);
+					interuptionJSONObject.put("type", category);
+					interuptionJSONObject.put("interruption_type", interruption_type);
+					Log.d(TAG, "Violation Category = "+category+ " , interruption_type: "+interruption_type);
 
 					interuptionsJSONArray.put(interuptionJSONObject);
 					cursor.moveToNext();
@@ -150,6 +158,13 @@ public class InteruptionRepository extends DBAdapter {
 		return interuptionsJSONArray;
 	}
 
+	private String getViolationCategory(String violation_full) {
+		StringTokenizer tokenizer = new StringTokenizer(violation_full, "-");
+		String category = tokenizer.nextToken();
+		System.out.println("Category: "+category);
+		return category;
+		
+	}
 	public boolean isAppTermited() {
 		boolean isTermited = false;
 		String[] argv = {};

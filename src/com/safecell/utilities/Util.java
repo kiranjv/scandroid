@@ -39,6 +39,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Date;
+import java.util.StringTokenizer;
 
 /**
  * @author uttama
@@ -155,4 +156,30 @@ public class Util {
 
 	}
 
+	public static long minitToMilliSeconds(long minits) {
+		return (minits * 60000);
+	}
+
+	public static long minitToSeconds(long minits) {
+		return (minits * 1000);
+	}
+
+	public static long milliToMinits(long millisces) {
+		return (millisces / 60000);
+	}
+
+	public static long milliToSeconds(long millsecs) {
+		return (millsecs / 1000);
+	}
+
+	public static String getTaskName(String package_name) {
+		StringTokenizer tokenizer = new StringTokenizer(package_name);
+		String taskname = null;
+		while (tokenizer.hasMoreElements()) {
+			taskname = tokenizer.nextToken(".");
+
+		}
+		System.out.println("Task Name: " + taskname);
+		return taskname;
+	}
 }

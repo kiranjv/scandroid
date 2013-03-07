@@ -1,7 +1,5 @@
 package com.safecell.receiver;
 
-import java.util.StringTokenizer;
-
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.content.Context;
@@ -29,9 +27,9 @@ import com.safecell.utilities.Util;
  * Keypad pad lock service
  * 
  */
-public class LockKeyPadService {
+public class LockKeyPadService_old {
 
-	private final static String TAG = LockKeyPadService.class.getSimpleName();
+	private final static String TAG = LockKeyPadService_old.class.getSimpleName();
 	private static boolean lock_status = false;
 	private static Context mContext;
 	private final static long MONITER_TIMER = 2000;
@@ -69,22 +67,24 @@ public class LockKeyPadService {
 							// Log.d(TAG, "This is previous package");
 						} else if (taskpackage.equalsIgnoreCase("com.safecell")) {
 							Log.d(TAG, "com.safecell task");
-						} else if (taskpackage.contains("mms")) {
+						} else if (taskpackage
+								.equalsIgnoreCase("com.android.mms")) {
 							if (TAGS.disableTexting) {
 								Util.saveInterruption(context,
-										"ATTEMPTED VIOLATION-MMS");
+										SCInterruption.ATTEMPVIOLATION);
 								startDisplayActivityAgain(context);
 								Log.d(TAG,
 										"Got the SMS ATTEMPTED VIOLATION . SMS config is enable");
 							} else {
 
 							}
-						} else if (taskpackage.contains("browser")) {
+						} else if (taskpackage
+								.equalsIgnoreCase("com.android.browser")) {
 							Log.d(TAG, "Got browser service.");
 
 							if (TAGS.disableWeb) {
 								Util.saveInterruption(context,
-										"ATTEMPTED VIOLATION-WEB");
+										SCInterruption.ATTEMPVIOLATION);
 								startDisplayActivityAgain(context);
 								Log.d(TAG,
 										"Got the WEB service. WEB config is enable. Attempted violation recorded");
@@ -93,13 +93,14 @@ public class LockKeyPadService {
 							}
 						}
 
-						else if (taskpackage.contains("email")) {
+						else if (taskpackage
+								.equalsIgnoreCase("com.android.email")) {
 							Log.d(TAG, "Got email service.");
 							Log.d(TAG, "Email config flag status: "
 									+ TAGS.disableEmail);
 							if (TAGS.disableEmail) {
 								Util.saveInterruption(context,
-										"ATTEMPTED VIOLATION-EMAIL");
+										SCInterruption.ATTEMPVIOLATION);
 								startDisplayActivityAgain(context);
 								Log.d(TAG,
 										"Got the email service. email config is enable. Attempted violation recorded");
@@ -128,12 +129,13 @@ public class LockKeyPadService {
 										SCInterruption.EMAIL);
 
 							}
-						} else if (taskpackage.contains("contacts")) {
+						} else if (taskpackage
+								.equalsIgnoreCase("com.android.contacts")) {
 							Log.d(TAG, "Got the contacts service.");
 
 							if (TAGS.disableCall) {
 								Util.saveInterruption(context,
-										"ATTEMPTED VIOLATION-PHONE");
+										SCInterruption.ATTEMPVIOLATION);
 								Log.d(TAG, "Contacts config flag status: "
 										+ TAGS.disableCall
 										+ "Attempted violation recorded");
@@ -141,16 +143,18 @@ public class LockKeyPadService {
 							} else {
 
 							}
-						} else if (taskpackage.contains("phone")) {
+						} else if (taskpackage
+								.equalsIgnoreCase("com.android.phone")) {
 							Log.d(TAG, "Got the phone service.");
 						}
 
-						else if (TAGS.SHOW_SPLASH
-								&& taskpackage
-										.equalsIgnoreCase("com.google.android.apps.maps")) {
-
+						else if (TAGS.SHOW_SPLASH && taskpackage
+								.equalsIgnoreCase("com.google.android.apps.maps")) {
+							
 							Log.d(TAG, "Got the phone service.");
-						} else if (taskpackage.contains("googlequicksearchbox")) {
+						}
+						else if (taskpackage
+								.equalsIgnoreCase("com.google.android.googlequicksearchbox")) {
 							Log.d(TAG, "Got the search service.");
 							if (ConfigurationHandler.getInstance()
 									.getConfiguration().getKeypadlock()) {
@@ -159,7 +163,8 @@ public class LockKeyPadService {
 
 							}
 
-						} else if (taskpackage.contains("launcher")) {
+						} else if (taskpackage
+								.equalsIgnoreCase("com.htc.launcher")) {
 
 							Log.d(TAG, "Got the launcher service.");
 							if (ConfigurationHandler.getInstance()
@@ -169,7 +174,8 @@ public class LockKeyPadService {
 
 							}
 
-						} else if (taskpackage.contains("twlauncher")) {
+						} else if (taskpackage
+								.equalsIgnoreCase("com.sec.android.app.twlauncher")) {
 							Log.d(TAG, "Got the twlauncher service.");
 							if (ConfigurationHandler.getInstance()
 									.getConfiguration().getKeypadlock()) {
@@ -189,12 +195,9 @@ public class LockKeyPadService {
 							}
 
 						} else {
-							
-							String taskName = Util.getTaskName(taskpackage);
-							String violation = SCInterruption.VIOLATION+"-"+taskName;
-							Util.saveInterruption(context, violation);
-									
-							Log.d(TAG, "Got the VIOLATION interruption:" + violation);
+							Log.d(TAG, "Got the VIOLATION type:" + taskpackage);
+							Util.saveInterruption(context,
+									SCInterruption.VIOLATION);
 							// Log.d(TAG, "Got the other service.");
 							// if (ConfigurationHandler.getInstance()
 							// .getConfiguration().getSplashShow()
@@ -268,7 +271,5 @@ public class LockKeyPadService {
 	public static boolean isLockActivated() {
 		return lock_status;
 	}
-
-	
 
 }

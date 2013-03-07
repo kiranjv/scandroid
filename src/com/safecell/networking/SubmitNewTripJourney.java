@@ -329,8 +329,8 @@ public class SubmitNewTripJourney {
 				// new Date(System.currentTimeMillis()).toGMTString());
 			}
 			outerJsonObject.put("trip", tripJsonObject);
-			// String stringFile = outerJsonObject.toString();
-			// Log.v(TAG, "Sending Json object = " + stringFile);
+			 String stringFile = outerJsonObject.toString();
+			 Log.v(TAG, "Sending Json object = " + stringFile);
 
 			// FileOutputStream fileOutputWrite = context.openFileOutput(
 			// "Submit Trip Request", Context.MODE_APPEND);

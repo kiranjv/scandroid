@@ -30,7 +30,7 @@ public class TAGS {
 	
 	public static int tripStartSpeed = 5;
 
-	public static int tripStopTime = 5;
+	public static int tripStopTime = 2;
 
 	public static boolean disableEmail = true;
 
@@ -41,6 +41,8 @@ public class TAGS {
 	public static boolean disableWeb = true;
 
 	public static boolean logWayPoints = true;
+
+	public static boolean keypadLock = true;
 	
 
 }
