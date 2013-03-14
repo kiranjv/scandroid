@@ -1,8 +1,11 @@
 package com.safecell;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
+import org.apache.http.util.EntityUtils;
 
 import android.content.Context;
 import android.location.Location;
@@ -35,7 +38,7 @@ public class RulesDownload {
 	private ProfilesRepository profilesRepository;
 	private String currentProfileLicenseKey;
 	private boolean ruleDownloadFailed = false;
-	
+
 	public static boolean RULES_REQUEST = false;
 
 	public RulesDownload(Context context) {
@@ -63,7 +66,7 @@ public class RulesDownload {
 				distanceSinceLastDownload = 0;
 				lastRulesDownloadlocation = location;
 				startDownloadThread();
-			
+
 				// downloadRule();
 
 			}
@@ -80,7 +83,7 @@ public class RulesDownload {
 			distanceSinceLastDownload = 0;
 			lastRulesDownloadlocation = location;
 			startDownloadThread();
-			
+
 			// downloadRule();
 
 		}
@@ -117,6 +120,7 @@ public class RulesDownload {
 				lastRulesDownloadlocation.getLongitude(), RULE_UPDATE_RADIUS);
 		HttpResponse rulesHttpResponse = rulesAccountRequest.ruleRequest();
 
+		
 		if (rulesHttpResponse != null) {
 			RULES_REQUEST = false;
 			ruleDownloadFailed = false;
@@ -339,10 +343,10 @@ public class RulesDownload {
 
 		try {
 			rulesRepository.updateInActive();
-
+			Log.v(TAG, "Rules: " + scRules);
 			boolean ruleIdPresent = false;
 			for (int i = 0; i < scRules.size(); i++) {
-
+				Log.v(TAG, "Rule : " + i + " :" + scRules);
 				int ruleID = scRules.get(i).getId();
 				ruleIdPresent = rulesRepository.ruleIdPresentInTable(String
 						.valueOf(ruleID));
@@ -369,6 +373,17 @@ public class RulesDownload {
 
 	public ArrayList<SCRule> getScRules() {
 		return scRules;
+	}
+
+	public String responseBody(HttpResponse response) throws ParseException,
+			IOException {
+		if (response == null) {
+			return null;
+		}
+
+		String responseBody = EntityUtils.toString(response.getEntity());
+
+		return responseBody;
 	}
 
 }

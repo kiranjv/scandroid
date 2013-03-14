@@ -112,8 +112,8 @@ public class TrackingScreenActivity extends Activity {
 	// SharedPreferences sharedPreferences;
 	ProgressDialog progressDialog;
 	public static final String PREF_FILE_NAME = "TrackingScreenPref";
-	protected static final String TAG = TrackingScreenActivity.class
-			.getSimpleName();
+	protected static final String TAG = "TrackingScreenActivity";
+
 	InterruptionStore interruptionStore;
 
 	static TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository;
@@ -146,7 +146,7 @@ public class TrackingScreenActivity extends Activity {
 	PowerManager pm;
 	protected PowerManager.WakeLock mWakeLock;
 	// boolean isTrackingCrashed = true;
-	ServiceConnection serviceConnection;
+	private static ServiceConnection serviceConnection;
 	TrackingService trackingService;
 	private Button btnMap;
 	private boolean SERVICE_CONNECT = true;
@@ -213,8 +213,8 @@ public class TrackingScreenActivity extends Activity {
 			@Override
 			public void onServiceDisconnected(ComponentName name) {
 				Log.v(TAG, "Service connected");
-//				Toast.makeText(TrackingScreenActivity.this,
-//						"Service is disconnected", 1000).show();
+				// Toast.makeText(TrackingScreenActivity.this,
+				// "Service is disconnected", 1000).show();
 				mBounded = false;
 				trackingService = null;
 			}
@@ -222,8 +222,8 @@ public class TrackingScreenActivity extends Activity {
 			@Override
 			public void onServiceConnected(ComponentName name, IBinder service) {
 				Log.v(TAG, "Service Disconnected");
-//				Toast.makeText(TrackingScreenActivity.this,
-//						"Service is connected", 1000).show();
+				// Toast.makeText(TrackingScreenActivity.this,
+				// "Service is connected", 1000).show();
 				mBounded = true;
 				LocalBinder mLocalBinder = (LocalBinder) service;
 				trackingService = mLocalBinder.getServerInstance();
@@ -1038,8 +1038,6 @@ public class TrackingScreenActivity extends Activity {
 				return super.onKeyDown(0, null);
 			}
 		}
-		
-		
 
 		return super.onKeyDown(keyCode, event);
 	}
@@ -1292,7 +1290,7 @@ public class TrackingScreenActivity extends Activity {
 			AudioManager aManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 			aManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 
-		//insertIntoSMS();
+			// insertIntoSMS();
 		} catch (Exception e) {
 			Log.e(TAG, "Exception while destroy tracking screen");
 			e.printStackTrace();
@@ -1306,6 +1304,8 @@ public class TrackingScreenActivity extends Activity {
 		// editor.commit();
 		// Last Change
 		try {
+			Log.e("SafeCellDebug", "Service connection val :"
+					+ serviceConnection);
 			context.unbindService(serviceConnection);
 		} catch (Exception e) {
 			Log.v(TAG, "Exception while unbind service");

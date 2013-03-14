@@ -108,6 +108,13 @@ public class TrackingService extends Service implements LocationListener,
 
 	private static Handler handlerTimerTask;
 	private static Runnable timerTaskRunner;
+
+	private static Handler autoStartTripTimer;
+	private static Runnable autoStarTripTimerRunner;
+
+	private static Handler idleMonitorTimerHandler = null;
+	private static Runnable idleMonitorTimerRunner = null;
+
 	InteruptionRepository ir;
 
 	private static final int AUTO_TRIP_START_SPEED_MONITOR_PERIOD = 5; // In
@@ -119,9 +126,6 @@ public class TrackingService extends Service implements LocationListener,
 	// off
 
 	private static long lastUpdateReceivedOn = 0;
-
-	private static Handler autoStartTripTimer;
-	private static Runnable autoStarTripTimerRunner;
 
 	static int AUTO_SAVE_DELAY_MINUTE = 5;
 
@@ -165,6 +169,7 @@ public class TrackingService extends Service implements LocationListener,
 
 	IBinder mBinder = new LocalBinder();
 	private Intent BATTERYintent = null;
+	private boolean isTripStarted;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -351,8 +356,8 @@ public class TrackingService extends Service implements LocationListener,
 	private void autoStartTrip() {
 		Log.d(TAG, "Auto Start Trip Started ");
 		// foregroundService("Auto trip started");
-		Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
-				Toast.LENGTH_LONG).show();
+//		Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
+//				Toast.LENGTH_LONG).show();
 
 		Log.v(TAG, "Setting ShutDown Flag");
 		new ConfigurePreferences(context).isShutDown(true);
@@ -421,7 +426,7 @@ public class TrackingService extends Service implements LocationListener,
 			autoStartTripTimer.removeCallbacks(autoStarTripTimerRunner);
 			autoStartTripTimer = null;
 			Log.v("Safecell", "**Trip Autostart cancelled");
-			
+
 		}
 	}
 
@@ -443,7 +448,7 @@ public class TrackingService extends Service implements LocationListener,
 						// "Auto Trip Start Timer fired but trip was not started: last update time too big.");
 						//
 						// autoStartTripTimer = null;
-						//return;
+						// return;
 					}
 					// else if (!tempTripJourneyWayPointsRepository
 					// .isAvarageTimeDiffFeasible()) {
@@ -468,7 +473,8 @@ public class TrackingService extends Service implements LocationListener,
 		autoStartTripTimer.postDelayed(autoStarTripTimerRunner,
 				Util.minitToSeconds(AUTO_TRIP_START_SPEED_MONITOR_PERIOD));
 		Log.v("Safecell", "**Trip Autostart Monitering started");
-		Toast.makeText(context, "Start trip timmer activated.", Toast.LENGTH_LONG).show();
+//		Toast.makeText(context, "Start trip timmer activated.",
+//				Toast.LENGTH_LONG).show();
 	}
 
 	/** Set timer to auto stop trip **/
@@ -494,13 +500,14 @@ public class TrackingService extends Service implements LocationListener,
 			// Log.v("Safecell", "**Auostop Timer Canceled");
 		}
 		handlerTimerTask = new Handler();
-//		handlerTimerTask.postDelayed(timerTaskRunner, AUTO_SAVE_DELAY_MINUTE
-//				* 60 * 1000 - 2 * 1000);
-		handlerTimerTask.postDelayed(timerTaskRunner, Util.minitToMilliSeconds(AUTO_SAVE_DELAY_MINUTE)
-				);
+		// handlerTimerTask.postDelayed(timerTaskRunner, AUTO_SAVE_DELAY_MINUTE
+		// * 60 * 1000 - 2 * 1000);
+		handlerTimerTask.postDelayed(timerTaskRunner,
+				Util.minitToMilliSeconds(AUTO_SAVE_DELAY_MINUTE));
 		Log.v("Tracking Service", "**Auto Stop Timer Started timer id "
 				+ timerTaskRunner.hashCode());
-		Toast.makeText(context, "Stop trip timmer activated.", Toast.LENGTH_LONG).show();
+//		Toast.makeText(context, "Stop trip timmer activated.",
+//				Toast.LENGTH_LONG).show();
 
 	}
 
@@ -517,8 +524,70 @@ public class TrackingService extends Service implements LocationListener,
 			handlerTimerTask.removeCallbacks(timerTaskRunner);
 			handlerTimerTask = null;
 			Log.v("Tracking Service", "**Timer Cancel");
-			
+
 		}
+	}
+
+	private void setDeviceIdleTimer() {
+		Log.d("IdleTimer:", "Creating idle moniter timer..");
+		idleMonitorTimerRunner = new Runnable() {
+
+			@Override
+			public void run() {
+				checkDeviceIdleForLong();
+			}
+		};
+
+		clearDeviceIdleTimer();
+		idleMonitorTimerHandler = new Handler();
+		idleMonitorTimerHandler.postDelayed(idleMonitorTimerRunner,
+				Util.minitToMilliSeconds(TAGS.tripStopTime));
+		Log.d("IdleTimer:",
+				"Idle moniter timer created at: "
+						+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+	}
+
+	private void clearDeviceIdleTimer() {
+		if (idleMonitorTimerHandler != null) {
+			idleMonitorTimerHandler.removeCallbacks(idleMonitorTimerRunner);
+			idleMonitorTimerHandler = null;
+			Log.d("IdleTimer:",
+					"Idle moniter timer cleared at: "
+							+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+		}
+	}
+
+	protected void checkDeviceIdleForLong() {
+		// clear idle timer
+		clearDeviceIdleTimer();
+
+		Log.d("IdleTimer:",
+				"Idle moniter timer activated at: "
+						+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+		Log.d("IdleTimer:", "Checking device idle time....");
+		TempTripJourneyWayPointsRepository waypoint_store = new TempTripJourneyWayPointsRepository(
+				context);
+
+		long timeDiffernce = waypoint_store
+				.getLastWaypointTimeDifference(System.currentTimeMillis());
+		long seconds = Util.milliToSeconds(timeDiffernce);
+		long minits = Util.milliToMinits(timeDiffernce);
+		Log.d("IdleTimer:", "Idle time difference milli sec's: "
+				+ timeDiffernce + " , Sec's: " + seconds + " , minits: "
+				+ minits);
+
+		if (minits >= TAGS.tripStopTime) {
+			Log.d("IdleTimer:", "Call trip save method");
+			saveTrip(context);
+		} else {
+			Log.d("IdleTimer:", "Need to continue trip start timer again");
+			if (new ConfigurePreferences(context).getTripStrated()
+					&& idleMonitorTimerHandler == null) {
+				Log.d("IdleTimer:", "Setting another timer");
+				setDeviceIdleTimer();
+			}
+		}
+
 	}
 
 	public void saveTripAsyncTask(final Context frontScreenActivity) {
@@ -661,9 +730,7 @@ public class TrackingService extends Service implements LocationListener,
 		{
 			resultFlag = false;
 			Log.d(TAG, "Trip too small to save");
-			 Toast.makeText(TrackingService.context,
-			 "Trip too small to save.",
-			 Toast.LENGTH_LONG).show();
+			
 			// // showNotification("Auto Save: Trip is small to save");
 			SharedPreferences.Editor editor1 = sharedPreferences.edit();
 			editor1.putBoolean("isTripPaused", false);
@@ -1128,13 +1195,12 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d(TAG, "Distance Travelled = " + total_distance);
 
 		if (!new ConfigurePreferences(context).isTripAbandon()) {
-//			 Toast.makeText(context, "Avg speed: " + avarageSpeed,
-//			 300).show();
+			// Toast.makeText(context, "Avg speed: " + avarageSpeed,
+			// 300).show();
 		}
 		SharedPreferences sharedPreferences = getSharedPreferences("TRIP",
 				MODE_WORLD_READABLE);
-		boolean isTripStarted = sharedPreferences.getBoolean("isTripStarted",
-				false);
+		isTripStarted = sharedPreferences.getBoolean("isTripStarted", false);
 
 		int dist = (int) total_distance;
 
@@ -1195,9 +1261,22 @@ public class TrackingService extends Service implements LocationListener,
 			tempTripJourneyWayPointsRepository.intsertWaypoint(wayPoint);
 		}
 
-		
+		/* Create timer to monitor device idle conditions. */
 		if (isTripStarted) {
+			if (idleMonitorTimerHandler == null) {
+				// set new moniter timer
+				setDeviceIdleTimer();
+			} else {
+				// reset existing new timer
+				idleMonitorTimerHandler.removeCallbacks(idleMonitorTimerRunner);
+				idleMonitorTimerHandler.postDelayed(idleMonitorTimerRunner,
+						Util.minitToMilliSeconds(TAGS.tripStopTime));
+			}
+		}
 
+		/* Display trip recording screen if it is not started. */
+		if (isTripStarted) {
+			Log.d("SafeCellDebug", "trackingScreenActivity: " + trackingScreenActivity);
 			if (!new ConfigurePreferences(context).isTripAbandon()
 					&& TAGS.SHOW_SPLASH && trackingScreenActivity == null) {
 				Log.v(TAG, "Starting tracking screen activity");
@@ -1489,8 +1568,8 @@ public class TrackingService extends Service implements LocationListener,
 				//
 				if (!new ConfigurePreferences(context).isTripAbandon()) {
 					Log.v(TAG, "Trip fail to save");
-					 Toast.makeText(TrackingService.context,
-					 "Trip fail to save", Toast.LENGTH_LONG).show();
+					Toast.makeText(TrackingService.context,
+							"Trip fail to save", Toast.LENGTH_LONG).show();
 					// foregroundService("Trip Save Failed. ");
 				}
 				// // tripNotSaveDialog(TrackingScreenActivity.context,
@@ -1503,9 +1582,9 @@ public class TrackingService extends Service implements LocationListener,
 				Log.d(TAG, "Trip Saved Sucessfully: " + result);
 				if (!new ConfigurePreferences(context).isTripAbandon()) {
 					Log.v(TAG, "Trip saved sucessfully");
-					 Toast.makeText(TrackingService.context,
-					 "Trip Saved Sucessfully ", Toast.LENGTH_LONG)
-					 .show();
+					Toast.makeText(TrackingService.context,
+							"Trip Saved Sucessfully ", Toast.LENGTH_LONG)
+							.show();
 
 					// foregroundService("Trip Saved Sucessfully ");
 				}
@@ -1563,6 +1642,7 @@ public class TrackingService extends Service implements LocationListener,
 					&& trackingScreenActivity != null) {
 				trackingScreenActivity.dismProgressDialog();
 				trackingScreenActivity.finish();
+				trackingScreenActivity = null;
 			}
 			if (!new ConfigurePreferences(context).isTripAbandon()
 					&& addTripActivity != null) {
@@ -1844,20 +1924,17 @@ public class TrackingService extends Service implements LocationListener,
 					.getConfiguration().getTripStartSpeed();
 			TAGS.tripStopTime = ConfigurationHandler.getInstance()
 					.getConfiguration().getTripStopTime();
-			
-			
-			
 
 			Log.d(TAG, "AUTO_SAVE_DELAY_MINUTE:" + AUTO_SAVE_DELAY_MINUTE);
 			Log.d(TAG, "TRIP_CUT_OFF: " + TRIP_CUT_OFF);
 			Log.d(TAG, "CONTROLLER NUMBER:" + TAGS.CONTORL_NUMBER);
-			Log.d(TAG, "isDisableCall:"	+ TAGS.disableCall);
-			Log.d(TAG, "isDisable Text:"+ TAGS.disableTexting);
-			Log.d(TAG, "isEmail Disable:"+ TAGS.disableEmail);
+			Log.d(TAG, "isDisableCall:" + TAGS.disableCall);
+			Log.d(TAG, "isDisable Text:" + TAGS.disableTexting);
+			Log.d(TAG, "isEmail Disable:" + TAGS.disableEmail);
 
-			Log.d(TAG, "isWEB Disable:"+TAGS.disableWeb);
+			Log.d(TAG, "isWEB Disable:" + TAGS.disableWeb);
 			Log.d(TAG, "SHOW SPLASH:" + TAGS.SHOW_SPLASH);
-			Log.d(TAG, "Keypad Lock: "+TAGS.keypadLock);
+			Log.d(TAG, "Keypad Lock: " + TAGS.keypadLock);
 			return null;
 
 		}

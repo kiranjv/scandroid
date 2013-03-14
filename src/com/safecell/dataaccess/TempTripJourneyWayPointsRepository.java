@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.safecell.TrackingService;
 import com.safecell.model.SCWayPoint;
+import com.safecell.utilities.ConfigurePreferences;
 import com.safecell.utilities.DateUtils;
 import com.safecell.utilities.DistanceAndTimeUtils;
 
@@ -241,34 +242,51 @@ public class TempTripJourneyWayPointsRepository extends DBAdapter {
 		return timeDifference;
 	}
 
+	public long getLastWaypointTimeDifference(long timestamp2) {
+		long timeDifference = 0;
+		long timeStamp1 = 0;
+		String[] args = {};
+		Cursor cursor = this
+				.selectQuery(
+						"SELECT timestamp FROM temp_trip_journey_waypoints where waypoint_id= (select max(waypoint_id ) from  temp_trip_journey_waypoints)",
+						args);
+		if (cursor != null && cursor.getCount() > 0) {
+			cursor.moveToFirst();
+			timeStamp1 = cursor.getLong(0);
+			timeDifference = timestamp2 - timeStamp1;
+
+		}
+		cursor.close();
+		return timeDifference;
+	}
+
 	public double getDistanceDifference(Location location) {
-		
+
 		double distanceDiff = 0.0;
 		double latitude = 0, longitude = 0;
 
 		try {
-		String[] args = {};
-		Cursor cursor = this
-				.selectQuery(
-						"SELECT latitude, longitude FROM temp_trip_journey_waypoints where waypoint_id= (select max(waypoint_id) from  temp_trip_journey_waypoints)",
-						args);
-		if (cursor != null && cursor.getCount() > 0) {
-			cursor.moveToFirst();
-			latitude = cursor.getDouble(0);
-			longitude = cursor.getDouble(1);
+			String[] args = {};
+			Cursor cursor = this
+					.selectQuery(
+							"SELECT latitude, longitude FROM temp_trip_journey_waypoints where waypoint_id= (select max(waypoint_id) from  temp_trip_journey_waypoints)",
+							args);
+			if (cursor != null && cursor.getCount() > 0) {
+				cursor.moveToFirst();
+				latitude = cursor.getDouble(0);
+				longitude = cursor.getDouble(1);
 
-			distanceDiff = DistanceAndTimeUtils.distFrom(latitude, longitude,
-					location.getLatitude(), location.getLongitude());
-			// distanceDiff = loc.distanceTo(location);
-			// distanceDiff *= 0.000621371192;
-			// loc.
-			// distanceDiff = DistanceAndTimeUtils.distanceMiles(latitude,
-			// longitude, location.getLatitude(), location.getLongitude());
-		}
-		cursor.close();
-		}
-		catch(Exception e)
-		{
+				distanceDiff = DistanceAndTimeUtils.distFrom(latitude,
+						longitude, location.getLatitude(),
+						location.getLongitude());
+				// distanceDiff = loc.distanceTo(location);
+				// distanceDiff *= 0.000621371192;
+				// loc.
+				// distanceDiff = DistanceAndTimeUtils.distanceMiles(latitude,
+				// longitude, location.getLatitude(), location.getLongitude());
+			}
+			cursor.close();
+		} catch (Exception e) {
 			Log.e(TAG, "Exception while getting distance difference");
 			e.printStackTrace();
 		}
@@ -308,8 +326,16 @@ public class TempTripJourneyWayPointsRepository extends DBAdapter {
 
 		double totalDistance = 0;
 		double averageSpeed = 0;
+		
+		String query  = "SELECT distance, timestamp, waypoint_id FROM temp_trip_journey_waypoints order by waypoint_id desc limit(5)";
+//		boolean isTripStrated = new ConfigurePreferences(context)
+//		.getTripStrated();
+//		if (isTripStrated) {
+//			query = "SELECT distance, timestamp, waypoint_id FROM temp_trip_journey_waypoints order by waypoint_id desc limit(12)";
+//		} else {
+//			query = "SELECT distance, timestamp, waypoint_id FROM temp_trip_journey_waypoints order by waypoint_id desc limit(5)";
+//		}
 
-		String query = "SELECT distance, timestamp, waypoint_id FROM temp_trip_journey_waypoints order by waypoint_id desc limit(12)";
 		String args[] = {};
 		Cursor cursor = this.selectQuery(query, args);
 

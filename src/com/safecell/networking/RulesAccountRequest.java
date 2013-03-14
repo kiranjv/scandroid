@@ -100,6 +100,7 @@ public class RulesAccountRequest extends AbstractProxy {
 
 		try {
 			rulesJsonArrayStr = EntityUtils.toString(httpResponse.getEntity());
+			Log.e(TAG, "Downloaded RULES: "+rulesJsonArrayStr);
 			ruleJSONArray = new JSONArray(rulesJsonArrayStr);
 
 			// Log.v("Safecell :"+TAG, ruleJSONArray.toString(4));

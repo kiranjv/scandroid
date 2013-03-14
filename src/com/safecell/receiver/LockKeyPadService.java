@@ -225,8 +225,7 @@ public class LockKeyPadService {
 				// TrackingService.context.startActivity(intent);
 
 				if (!PhoneReceiver.EMERGENCYCALL_ACTIVE) {
-					if (ConfigurationHandler.getInstance().getConfiguration()
-							.getSplashShow()
+					if (TAGS.SHOW_SPLASH
 							&& new ConfigurePreferences(context)
 									.getTripStrated()) {
 						Log.d(TAG, "Displaying tracking activity again..");
@@ -240,8 +239,7 @@ public class LockKeyPadService {
 						intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
 						TrackingService.context.startActivity(intent);
-					} else if (ConfigurationHandler.getInstance()
-							.getConfiguration().getKeypadlock()) {
+					} else if (TAGS.keypadLock) {
 						Log.d(TAG, "Displaying home screen activity again..");
 						HomeScreenActivity.KEYPAD_LOCK_DESTROY = true;
 						Intent intent = new Intent(TrackingService.context,

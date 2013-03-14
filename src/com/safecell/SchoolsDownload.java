@@ -106,7 +106,7 @@ public class SchoolsDownload {
 				lastSchoolDownLoadLocation.getLongitude(), SCHOOL_UPDATE_RADIUS);
 		String result = downloadSchools.getRequest();
 
-		Log.d(TAG, "School rules download response: " + result);
+		Log.e(TAG, "School rules download response: " + result);
 		if (result != null) {
 
 			getSchoolsResponseHandler = new GetSchoolsResponseHandler(result);
