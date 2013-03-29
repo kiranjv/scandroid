@@ -391,6 +391,8 @@ public class SubmitNewTripJourney {
 
 	public HttpResponse postRequest() {
 
+		Log.e(TAG, "*************Submiting trip json to server****************");
+		
 		DefaultHttpClient client = new DefaultHttpClient();
 
 		client.addRequestInterceptor(new HttpRequestInterceptor() {

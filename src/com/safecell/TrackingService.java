@@ -81,8 +81,8 @@ public class TrackingService extends Service implements LocationListener,
 	public static final int RESPONSE_NULL_WHILE_SAVING = 1;
 	public static final int EXCEPTION_WHILE_SAVING = 2;
 	public static String SELECTED_PROVIDER = null;
-	private static int LOCATION_UPDATE_TIME_INTERVAL = 2000; // 2 SEC
-	private static int LOCATION_UPDATE_DISTANCE_INTERVAL = 2; // 2 METERS
+	private static int LOCATION_UPDATE_TIME_INTERVAL = 0; // 0 SEC
+	private static int LOCATION_UPDATE_DISTANCE_INTERVAL = 5; // 2 METERS
 	private static Double latitude = 0.0, longitude = 0.0;
 	private static Location currentLocation;
 
@@ -114,6 +114,10 @@ public class TrackingService extends Service implements LocationListener,
 
 	private static Handler idleMonitorTimerHandler = null;
 	private static Runnable idleMonitorTimerRunner = null;
+	
+	private static Handler idlePointsTimerHandler = null;
+	private static Runnable idlePointsTimerRunner = null;
+	private static int IDLE_POINTS_CLEAR_TIME = 2; //mints
 
 	InteruptionRepository ir;
 
@@ -546,6 +550,25 @@ public class TrackingService extends Service implements LocationListener,
 				"Idle moniter timer created at: "
 						+ DateUtils.getTimeStamp(System.currentTimeMillis()));
 	}
+	
+	
+	private void setPointsIdleTimer() {
+		Log.d("IdlePointTimer:", "Creating idle points moniter timer..");
+		idlePointsTimerRunner = new Runnable() {
+			
+			@Override
+			public void run() {
+				/*check and clear idle points from database.*/
+				
+			}
+		};
+		clearDeviceIdlePointsTimer();
+		idlePointsTimerHandler = new Handler();
+		idlePointsTimerHandler.postDelayed(idlePointsTimerRunner, Util.minitToMilliSeconds(IDLE_POINTS_CLEAR_TIME));
+		Log.d("IdlePointTimer:",
+				"Idle points moniter timer created at: "
+						+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+	}
 
 	private void clearDeviceIdleTimer() {
 		if (idleMonitorTimerHandler != null) {
@@ -557,6 +580,16 @@ public class TrackingService extends Service implements LocationListener,
 		}
 	}
 
+	private void clearDeviceIdlePointsTimer() {
+		if(idlePointsTimerHandler != null) {
+			idlePointsTimerHandler.removeCallbacks(idlePointsTimerRunner);
+			idlePointsTimerHandler = null;
+			Log.d("IdlePointTimer:",
+					"Idle points moniter timer cleared at: "
+							+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+			
+		}
+	}
 	protected void checkDeviceIdleForLong() {
 		// clear idle timer
 		clearDeviceIdleTimer();
@@ -1091,8 +1124,10 @@ public class TrackingService extends Service implements LocationListener,
 			requestGPSUpdates();
 		} else if (locationManager
 				.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+			Log.e(TAG, "NETWORK PROVIDER LOCATION REQUEST");
 			requestNetworkLocationUpdates();
 		} else {
+			Log.e(TAG, "NO NETWORK PROVIDER AVAILABLE");
 			noGPSProviderAvailable();
 		}
 	}
@@ -1212,7 +1247,7 @@ public class TrackingService extends Service implements LocationListener,
 
 		Log.d(TAG, "is Trip Started " + isTripStarted);
 		if (avarageSpeed >= TRIP_CUT_OFF && isTripStarted == false
-				&& autoStartTripTimer == null) {
+				&& autoStartTripTimer == null && total_distance > 0.3) {
 			SharedPreferences tripAutoStartSharedPref = getSharedPreferences(
 					"TripCheckBox", MODE_WORLD_READABLE);
 			boolean startAutoTrips = tripAutoStartSharedPref.getBoolean(
@@ -1261,6 +1296,15 @@ public class TrackingService extends Service implements LocationListener,
 			tempTripJourneyWayPointsRepository.intsertWaypoint(wayPoint);
 		}
 
+		/* Create timer to clear idle locations from repo*/
+		/*
+		 * if(!isTripStarted) { if(idlePointsTimerHandler == null) { // set new
+		 * moniter timer setPointsIdleTimer(); } else { // reset existing new
+		 * timer idlePointsTimerHandler.removeCallbacks(idlePointsTimerRunner);
+		 * idlePointsTimerHandler.postDelayed(idlePointsTimerRunner,
+		 * Util.minitToMilliSeconds(IDLE_POINTS_CLEAR_TIME)); } }
+		 */
+		
 		/* Create timer to monitor device idle conditions. */
 		if (isTripStarted) {
 			if (idleMonitorTimerHandler == null) {
@@ -1276,7 +1320,7 @@ public class TrackingService extends Service implements LocationListener,
 
 		/* Display trip recording screen if it is not started. */
 		if (isTripStarted) {
-			Log.d("SafeCellDebug", "trackingScreenActivity: " + trackingScreenActivity);
+			Log.d("SafeCellDebug", "trackingScreenActivity: " + trackingScreenActivity+ " ,isTripStarted:"+isTripStarted);
 			if (!new ConfigurePreferences(context).isTripAbandon()
 					&& TAGS.SHOW_SPLASH && trackingScreenActivity == null) {
 				Log.v(TAG, "Starting tracking screen activity");
@@ -1522,9 +1566,12 @@ public class TrackingService extends Service implements LocationListener,
 			try {
 				Log.v(TAG, "Do In Background");
 
+				
 				// Looper.prepare();
 				TrackingScreenActivity.isTripSavingInProgress = true;
 				TrackingService.ignoreLocationUpdates = true;
+				Log.v(TAG, "Background service. Clear Idle moniter timer");
+				clearDeviceIdleTimer();
 				saveTripAsyncTask(context);
 				Log.v(TAG, "Saved On Server");
 				// onPostExecute(resultFlag);
