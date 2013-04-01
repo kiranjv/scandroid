@@ -95,6 +95,10 @@ public class EmergencyHandler extends AsyncTask<Void, Void, String> {
 
 		} else {
 			Log.e(TAG, "Response is null");
+			String name = "911";
+			String number = "911";
+
+			setEmergencyNumbers(name, number, true);
 		}
 		super.onPostExecute(response);
 	}

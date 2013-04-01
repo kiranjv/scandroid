@@ -59,6 +59,8 @@ public class DBAdapter {
 
 			db.execSQL(SMSRepository.CREATE_QUERY);
 			db.execSQL(LicenseRepository.CREATE_TABLE_QUERY);
+			db.execSQL(TripJsonRepository.CREATE_TABLE_QUERY);
+
 			// db = mDBHelper.getWritableDatabase();
 		}
 

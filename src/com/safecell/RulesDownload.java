@@ -346,7 +346,7 @@ public class RulesDownload {
 			Log.v(TAG, "Rules: " + scRules);
 			boolean ruleIdPresent = false;
 			for (int i = 0; i < scRules.size(); i++) {
-				Log.v(TAG, "Rule : " + i + " :" + scRules);
+				
 				int ruleID = scRules.get(i).getId();
 				ruleIdPresent = rulesRepository.ruleIdPresentInTable(String
 						.valueOf(ruleID));

@@ -64,6 +64,7 @@ public class SubmitNewTripJourney {
 	String wayPointStringFromFile, interuptionStringFromFile;
 	StringEntity stringEntity;
 	JSONObject outerJsonObject;
+
 	HttpResponse response;
 	private int accountID;
 	private int profileID;
@@ -93,6 +94,19 @@ public class SubmitNewTripJourney {
 		this.tripName = tripName;
 		this.totalMiles = totalMiles;
 		this.profileName = profileName;
+
+	}
+	
+	
+	public SubmitNewTripJourney(Context context, int accountID, int profileID,
+			String apiKey) {
+		interruptionsJsonArray = new JSONArray();
+		this.context = context;
+		resources = context.getResources();
+		this.accountID = accountID;
+		this.profileID = profileID;
+		this.apiKey = apiKey;
+		
 
 	}
 
@@ -277,7 +291,9 @@ public class SubmitNewTripJourney {
 		JSONArray outerjounaryJsonArray = new JSONArray();
 
 		try {
-			Log.d(TAG, "Nuber of interruptions: " + interruptionsJsonArray.length());
+			Log.d(TAG,
+					"Nuber of interruptions: "
+							+ interruptionsJsonArray.length());
 			// Toast.makeText(context,
 			// "Interruptions Count = "+interruptionsJsonArray.length(),
 			// Toast.LENGTH_LONG).show();
@@ -329,8 +345,8 @@ public class SubmitNewTripJourney {
 				// new Date(System.currentTimeMillis()).toGMTString());
 			}
 			outerJsonObject.put("trip", tripJsonObject);
-			 String stringFile = outerJsonObject.toString();
-			 Log.v(TAG, "Sending Json object = " + stringFile);
+			String stringFile = outerJsonObject.toString();
+			Log.v(TAG, "Sending Json object = " + stringFile);
 
 			// FileOutputStream fileOutputWrite = context.openFileOutput(
 			// "Submit Trip Request", Context.MODE_APPEND);
@@ -389,10 +405,15 @@ public class SubmitNewTripJourney {
 
 	}
 
+	public HttpResponse postRequest(JSONObject jsonObject) {
+		this.outerJsonObject = jsonObject;
+		return postRequest();
+	}
+
 	public HttpResponse postRequest() {
 
 		Log.e(TAG, "*************Submiting trip json to server****************");
-		
+
 		DefaultHttpClient client = new DefaultHttpClient();
 
 		client.addRequestInterceptor(new HttpRequestInterceptor() {
@@ -529,5 +550,20 @@ public class SubmitNewTripJourney {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * @return the outerJsonObject
+	 */
+	public JSONObject getOuterJsonObject() {
+		return outerJsonObject;
+	}
+
+	/**
+	 * @param outerJsonObject
+	 *            the outerJsonObject to set
+	 */
+	public void setOuterJsonObject(JSONObject outerJsonObject) {
+		this.outerJsonObject = outerJsonObject;
 	}
 }

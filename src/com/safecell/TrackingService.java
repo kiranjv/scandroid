@@ -6,10 +6,12 @@ import com.safecell.dataaccess.InteruptionRepository;
 import com.safecell.dataaccess.ProfilesRepository;
 import com.safecell.dataaccess.SMSRepository;
 import com.safecell.dataaccess.TempTripJourneyWayPointsRepository;
+import com.safecell.dataaccess.TripJsonRepository;
 import com.safecell.model.SCProfile;
 import com.safecell.model.SCSms;
 import com.safecell.model.SCWayPoint;
 import com.safecell.networking.ConfigurationHandler;
+import com.safecell.networking.ExistingTripJsonHandler;
 import com.safecell.networking.NetWork_Information;
 import com.safecell.networking.SubmitNewTripJourney;
 import com.safecell.networking.SubmitNewTripJourneyResponceHandler;
@@ -26,6 +28,8 @@ import com.safecell.utilities.UIUtils;
 import com.safecell.utilities.Util;
 
 import org.apache.http.HttpResponse;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -39,6 +43,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.SumPathEffect;
 import android.location.GpsStatus.NmeaListener;
 import android.location.Location;
 import android.location.LocationListener;
@@ -114,10 +119,10 @@ public class TrackingService extends Service implements LocationListener,
 
 	private static Handler idleMonitorTimerHandler = null;
 	private static Runnable idleMonitorTimerRunner = null;
-	
+
 	private static Handler idlePointsTimerHandler = null;
 	private static Runnable idlePointsTimerRunner = null;
-	private static int IDLE_POINTS_CLEAR_TIME = 2; //mints
+	private static int IDLE_POINTS_CLEAR_TIME = 2; // mints
 
 	InteruptionRepository ir;
 
@@ -174,6 +179,7 @@ public class TrackingService extends Service implements LocationListener,
 	IBinder mBinder = new LocalBinder();
 	private Intent BATTERYintent = null;
 	private boolean isTripStarted;
+	public static boolean NO_INTERNET_SAVE = false;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -360,8 +366,8 @@ public class TrackingService extends Service implements LocationListener,
 	private void autoStartTrip() {
 		Log.d(TAG, "Auto Start Trip Started ");
 		// foregroundService("Auto trip started");
-//		Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
-//				Toast.LENGTH_LONG).show();
+		// Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
+		// Toast.LENGTH_LONG).show();
 
 		Log.v(TAG, "Setting ShutDown Flag");
 		new ConfigurePreferences(context).isShutDown(true);
@@ -477,8 +483,8 @@ public class TrackingService extends Service implements LocationListener,
 		autoStartTripTimer.postDelayed(autoStarTripTimerRunner,
 				Util.minitToSeconds(AUTO_TRIP_START_SPEED_MONITOR_PERIOD));
 		Log.v("Safecell", "**Trip Autostart Monitering started");
-//		Toast.makeText(context, "Start trip timmer activated.",
-//				Toast.LENGTH_LONG).show();
+		// Toast.makeText(context, "Start trip timmer activated.",
+		// Toast.LENGTH_LONG).show();
 	}
 
 	/** Set timer to auto stop trip **/
@@ -510,8 +516,8 @@ public class TrackingService extends Service implements LocationListener,
 				Util.minitToMilliSeconds(AUTO_SAVE_DELAY_MINUTE));
 		Log.v("Tracking Service", "**Auto Stop Timer Started timer id "
 				+ timerTaskRunner.hashCode());
-//		Toast.makeText(context, "Stop trip timmer activated.",
-//				Toast.LENGTH_LONG).show();
+		// Toast.makeText(context, "Stop trip timmer activated.",
+		// Toast.LENGTH_LONG).show();
 
 	}
 
@@ -550,24 +556,23 @@ public class TrackingService extends Service implements LocationListener,
 				"Idle moniter timer created at: "
 						+ DateUtils.getTimeStamp(System.currentTimeMillis()));
 	}
-	
-	
+
 	private void setPointsIdleTimer() {
 		Log.d("IdlePointTimer:", "Creating idle points moniter timer..");
 		idlePointsTimerRunner = new Runnable() {
-			
+
 			@Override
 			public void run() {
-				/*check and clear idle points from database.*/
-				
+				/* check and clear idle points from database. */
+
 			}
 		};
 		clearDeviceIdlePointsTimer();
 		idlePointsTimerHandler = new Handler();
-		idlePointsTimerHandler.postDelayed(idlePointsTimerRunner, Util.minitToMilliSeconds(IDLE_POINTS_CLEAR_TIME));
-		Log.d("IdlePointTimer:",
-				"Idle points moniter timer created at: "
-						+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+		idlePointsTimerHandler.postDelayed(idlePointsTimerRunner,
+				Util.minitToMilliSeconds(IDLE_POINTS_CLEAR_TIME));
+		Log.d("IdlePointTimer:", "Idle points moniter timer created at: "
+				+ DateUtils.getTimeStamp(System.currentTimeMillis()));
 	}
 
 	private void clearDeviceIdleTimer() {
@@ -581,15 +586,15 @@ public class TrackingService extends Service implements LocationListener,
 	}
 
 	private void clearDeviceIdlePointsTimer() {
-		if(idlePointsTimerHandler != null) {
+		if (idlePointsTimerHandler != null) {
 			idlePointsTimerHandler.removeCallbacks(idlePointsTimerRunner);
 			idlePointsTimerHandler = null;
-			Log.d("IdlePointTimer:",
-					"Idle points moniter timer cleared at: "
-							+ DateUtils.getTimeStamp(System.currentTimeMillis()));
-			
+			Log.d("IdlePointTimer:", "Idle points moniter timer cleared at: "
+					+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+
 		}
 	}
+
 	protected void checkDeviceIdleForLong() {
 		// clear idle timer
 		clearDeviceIdleTimer();
@@ -704,14 +709,29 @@ public class TrackingService extends Service implements LocationListener,
 			long createJsonTime = (createJsonEnd - createJsonStart) / 1000;
 			Log.e(TAG, "Json create time: " + createJsonTime);
 
+			if (NO_INTERNET_SAVE) {
+				Log.e(TAG, "NO_INTERNET_SAVE Json created: " + createJsonTime);
+				TripJsonRepository tripJsonRepository = new TripJsonRepository(
+						context);
+				tripJsonRepository.saveJSON(submitNewTripJourney
+						.getOuterJsonObject());
+
+				int json_no = tripJsonRepository.getNumberOfTripJsons();
+				Log.e(TAG, "TOTAL JSON IN DATABASE: " + json_no);
+
+				
+
+				return;
+			}
+
 			long sendHTTPStart = System.currentTimeMillis();
 
-			while (true) {
-				Log.v(TAG, "Checking network status");
-				if (NetWork_Information.isNetworkAvailable(context)) {
-					break;
-				}
-			}
+			// while (true) {
+			// Log.v(TAG, "Checking network status");
+			// if (NetWork_Information.isNetworkAvailable(context)) {
+			// break;
+			// }
+			// }
 
 			HttpResponse httpResponse = httpResponse = submitNewTripJourney
 					.postRequest();
@@ -763,7 +783,7 @@ public class TrackingService extends Service implements LocationListener,
 		{
 			resultFlag = false;
 			Log.d(TAG, "Trip too small to save");
-			
+
 			// // showNotification("Auto Save: Trip is small to save");
 			SharedPreferences.Editor editor1 = sharedPreferences.edit();
 			editor1.putBoolean("isTripPaused", false);
@@ -784,7 +804,7 @@ public class TrackingService extends Service implements LocationListener,
 
 	// @SuppressWarnings("unchecked")
 	public void saveTrip(final Context context) {
-		TrackingService.ignoreLocationUpdates = true;
+
 		if (mSmsDetector != null) {
 			mSmsDetector.stop();
 		}
@@ -796,6 +816,9 @@ public class TrackingService extends Service implements LocationListener,
 		}
 		removeLocationUpdates();
 
+		Log.v(TAG, "Background service. Clear Idle moniter timer");
+		clearDeviceIdleTimer();
+
 		// Enable mobile network
 		Log.v(TAG, "Enabling mobile network");
 		Util.setMobileDataEnabled(context, true);
@@ -803,6 +826,8 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d(TAG,
 				"Network Connections "
 						+ NetWork_Information.isNetworkAvailable(context));
+
+		/* Check network availability for 1 min */
 		while (!NetWork_Information.isNetworkAvailable(context)) {
 			if (count < 30) {
 				waiting(2 * 1000);
@@ -810,6 +835,12 @@ public class TrackingService extends Service implements LocationListener,
 			} else {
 				break;
 			}
+		}
+
+		/* Activate flag after 1 min time. */
+		if (!NetWork_Information.isNetworkAvailable(context)) {
+			Log.e(TAG, "Enableing NO_INTERNET_SAVE flag");
+			NO_INTERNET_SAVE = true;
 		}
 		// do {
 		// waiting(2*1000);
@@ -834,6 +865,17 @@ public class TrackingService extends Service implements LocationListener,
 			saveTrip.execute();
 			// saveTripAsyncTask(context);
 			// startTrip();
+		} else {
+			if (NO_INTERNET_SAVE) {
+				Log.d(TAG, "Trip Saving withouot internet");
+				if (!new ConfigurePreferences(context).isTripAbandon()) {
+					Toast.makeText(TrackingService.context,
+							"Trip Saving withouot internet", Toast.LENGTH_LONG)
+							.show();
+				}
+				SaveTrip saveTrip = new SaveTrip();
+				saveTrip.execute();
+			}
 		}
 
 	}
@@ -1239,6 +1281,16 @@ public class TrackingService extends Service implements LocationListener,
 
 		int dist = (int) total_distance;
 
+		/* Check previous trip json's exist in database = */
+		if (NetWork_Information.isNetworkAvailable(context) && !ExistingTripJsonHandler.isInProgress) {
+			TripJsonRepository json_repo = new TripJsonRepository(context);
+			int num_trips = json_repo.getNumberOfTripJsons();
+			if (num_trips > 0) {
+				Log.d(TAG, "Previous trips exist's. Saving the trip.");
+                new ExistingTripJsonHandler(context).postAllTripJsons();
+			}
+		}
+
 		// if (total_distance >= 0.2 && isTripStarted) {
 		// Log.v(TAG, "Mannual save call");
 		// TrackingScreenActivity.isTripSavingInProgress = true;
@@ -1296,7 +1348,7 @@ public class TrackingService extends Service implements LocationListener,
 			tempTripJourneyWayPointsRepository.intsertWaypoint(wayPoint);
 		}
 
-		/* Create timer to clear idle locations from repo*/
+		/* Create timer to clear idle locations from repo */
 		/*
 		 * if(!isTripStarted) { if(idlePointsTimerHandler == null) { // set new
 		 * moniter timer setPointsIdleTimer(); } else { // reset existing new
@@ -1304,7 +1356,7 @@ public class TrackingService extends Service implements LocationListener,
 		 * idlePointsTimerHandler.postDelayed(idlePointsTimerRunner,
 		 * Util.minitToMilliSeconds(IDLE_POINTS_CLEAR_TIME)); } }
 		 */
-		
+
 		/* Create timer to monitor device idle conditions. */
 		if (isTripStarted) {
 			if (idleMonitorTimerHandler == null) {
@@ -1320,7 +1372,9 @@ public class TrackingService extends Service implements LocationListener,
 
 		/* Display trip recording screen if it is not started. */
 		if (isTripStarted) {
-			Log.d("SafeCellDebug", "trackingScreenActivity: " + trackingScreenActivity+ " ,isTripStarted:"+isTripStarted);
+			Log.d("SafeCellDebug", "trackingScreenActivity: "
+					+ trackingScreenActivity + " ,isTripStarted:"
+					+ isTripStarted);
 			if (!new ConfigurePreferences(context).isTripAbandon()
 					&& TAGS.SHOW_SPLASH && trackingScreenActivity == null) {
 				Log.v(TAG, "Starting tracking screen activity");
@@ -1566,14 +1620,14 @@ public class TrackingService extends Service implements LocationListener,
 			try {
 				Log.v(TAG, "Do In Background");
 
-				
 				// Looper.prepare();
 				TrackingScreenActivity.isTripSavingInProgress = true;
 				TrackingService.ignoreLocationUpdates = true;
-				Log.v(TAG, "Background service. Clear Idle moniter timer");
-				clearDeviceIdleTimer();
+				
+
 				saveTripAsyncTask(context);
 				Log.v(TAG, "Saved On Server");
+
 				// onPostExecute(resultFlag);
 
 			} catch (Exception e) {
@@ -1600,41 +1654,7 @@ public class TrackingService extends Service implements LocationListener,
 			editor.putBoolean("isTripStarted", false);
 			editor.commit();
 
-			if (!result) {
-				Log.d(TAG, "Save failled save result status: " + result);
-				// try {
-				//
-				// if (trackingScreenActivity != null) {
-				// trackingScreenActivity.dismProgressDialog();
-				// // trackingScreenActivity.finish();
-				// }
-				// if (addTripActivity != null) {
-				// addTripActivity.dismProgressDialog();
-				// // addTripActivity.finish();
-				// }
-				//
-				if (!new ConfigurePreferences(context).isTripAbandon()) {
-					Log.v(TAG, "Trip fail to save");
-					Toast.makeText(TrackingService.context,
-							"Trip fail to save", Toast.LENGTH_LONG).show();
-					// foregroundService("Trip Save Failed. ");
-				}
-				// // tripNotSaveDialog(TrackingScreenActivity.context,
-				// // EXCEPTION_WHILE_SAVING);
-				// } catch (Exception e) {
-				// Log.e(TAG, "Exception occured in save preexecute");
-				// e.printStackTrace();
-				// }
-			} else {
-				Log.d(TAG, "Trip Saved Sucessfully: " + result);
-				if (!new ConfigurePreferences(context).isTripAbandon()) {
-					Log.v(TAG, "Trip saved sucessfully");
-					Toast.makeText(TrackingService.context,
-							"Trip Saved Sucessfully ", Toast.LENGTH_LONG)
-							.show();
-
-					// foregroundService("Trip Saved Sucessfully ");
-				}
+			if (NO_INTERNET_SAVE) {
 
 				// cancel battery timer and flags
 				if (new ConfigurePreferences(context).isShutDown()) {
@@ -1651,6 +1671,61 @@ public class TrackingService extends Service implements LocationListener,
 						TrackingService.this);
 				tempTripJourneyWayPointsRepository.deleteTrip();
 				ir.deleteInteruptions();
+			} else {
+
+				if (!result) {
+					Log.d(TAG, "Save failled save result status: " + result);
+					// try {
+					//
+					// if (trackingScreenActivity != null) {
+					// trackingScreenActivity.dismProgressDialog();
+					// // trackingScreenActivity.finish();
+					// }
+					// if (addTripActivity != null) {
+					// addTripActivity.dismProgressDialog();
+					// // addTripActivity.finish();
+					// }
+					//
+					if (!new ConfigurePreferences(context).isTripAbandon()) {
+						Log.v(TAG, "Trip fail to save");
+						Toast.makeText(TrackingService.context,
+								"Trip fail to save", Toast.LENGTH_LONG).show();
+						// foregroundService("Trip Save Failed. ");
+					}
+					// // tripNotSaveDialog(TrackingScreenActivity.context,
+					// // EXCEPTION_WHILE_SAVING);
+					// } catch (Exception e) {
+					// Log.e(TAG, "Exception occured in save preexecute");
+					// e.printStackTrace();
+					// }
+				} else {
+					Log.d(TAG, "Trip Saved Sucessfully: " + result);
+					if (!new ConfigurePreferences(context).isTripAbandon()) {
+						Log.v(TAG, "Trip saved sucessfully");
+						Toast.makeText(TrackingService.context,
+								"Trip Saved Sucessfully ", Toast.LENGTH_LONG)
+								.show();
+
+						// foregroundService("Trip Saved Sucessfully ");
+					}
+
+					// cancel battery timer and flags
+					if (new ConfigurePreferences(context).isShutDown()) {
+						Log.v(TAG, "DeActivating ShutDown configuration flag");
+						new ConfigurePreferences(context).isShutDown(false);
+					}
+
+					if (BootReceiver.SHUTDOWNSAVE) {
+						BootReceiver.SHUTDOWNSAVE = false;
+					}
+
+					Log.v(TAG, "Clearing local database trip data");
+					TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
+							TrackingService.this);
+					tempTripJourneyWayPointsRepository.deleteTrip();
+					ir.deleteInteruptions();
+
+				}
 
 			}
 
@@ -2136,5 +2211,7 @@ public class TrackingService extends Service implements LocationListener,
 			BlockSMSService.deactivateSMSBlock();
 		}
 	}
+
+	
 
 }
