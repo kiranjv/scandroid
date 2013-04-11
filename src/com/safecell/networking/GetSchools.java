@@ -5,13 +5,14 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
 
-import android.content.Context;
-import android.util.Log;
-
 import com.safecell.dataaccess.AccountRepository;
 import com.safecell.utilities.QueryString;
 import com.safecell.utilities.URLs;
-import com.safecell.utilities.Util;
+
+import android.content.Context;
+import android.util.Log;
+
+
 
 public class GetSchools extends AbstractProxy {
 

@@ -719,9 +719,8 @@ public class TrackingService extends Service implements LocationListener,
 				int json_no = tripJsonRepository.getNumberOfTripJsons();
 				Log.e(TAG, "TOTAL JSON IN DATABASE: " + json_no);
 
-				
 
-				return;
+
 			}
 
 			long sendHTTPStart = System.currentTimeMillis();
@@ -1282,12 +1281,13 @@ public class TrackingService extends Service implements LocationListener,
 		int dist = (int) total_distance;
 
 		/* Check previous trip json's exist in database = */
-		if (NetWork_Information.isNetworkAvailable(context) && !ExistingTripJsonHandler.isInProgress) {
+		if (NetWork_Information.isNetworkAvailable(context)
+				&& !ExistingTripJsonHandler.isInProgress) {
 			TripJsonRepository json_repo = new TripJsonRepository(context);
 			int num_trips = json_repo.getNumberOfTripJsons();
 			if (num_trips > 0) {
 				Log.d(TAG, "Previous trips exist's. Saving the trip.");
-                new ExistingTripJsonHandler(context).postAllTripJsons();
+				new ExistingTripJsonHandler(context).postAllTripJsons();
 			}
 		}
 
@@ -1477,8 +1477,8 @@ public class TrackingService extends Service implements LocationListener,
 						.getService_center());
 				values.put("locked", smsArrayList.get(i).getLocked());
 
-				context.getContentResolver().insert(Uri.parse("content://sms"),
-						values);
+//				context.getContentResolver().insert(Uri.parse("content://sms"),
+//						values);
 			}
 			smsRepository.deleteSms();
 			smsPresent = true;
@@ -1592,7 +1592,9 @@ public class TrackingService extends Service implements LocationListener,
 			context = TrackingService.context;
 
 			try {
-
+				/* again clears the idle timmer */
+				clearDeviceIdleTimer();
+				
 				if (!new ConfigurePreferences(context).isTripAbandon()
 						&& trackingScreenActivity != null
 						&& !BootReceiver.SHUTDOWNSAVE) {
@@ -1623,7 +1625,6 @@ public class TrackingService extends Service implements LocationListener,
 				// Looper.prepare();
 				TrackingScreenActivity.isTripSavingInProgress = true;
 				TrackingService.ignoreLocationUpdates = true;
-				
 
 				saveTripAsyncTask(context);
 				Log.v(TAG, "Saved On Server");
@@ -2211,7 +2212,5 @@ public class TrackingService extends Service implements LocationListener,
 			BlockSMSService.deactivateSMSBlock();
 		}
 	}
-
-	
 
 }

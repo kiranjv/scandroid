@@ -59,7 +59,7 @@ public class SMSReceiver extends BroadcastReceiver {
 		isSendSMS = context.getSharedPreferences("SMSAutoReplyCheckBox",
 				Context.MODE_WORLD_READABLE).getBoolean("isAutoreply", true);
 		Log.d(TAG, "Intent " + intent.getAction());
-		SpeechService speechservice = new SpeechService(mContext);
+		//SpeechService speechservice = new SpeechService(mContext);
 		
 		if(smsBlock && new ConfigurePreferences(mContext).isTripAbandon()) {
 			Log.v(TAG, "SMS receive when trip abandon");

@@ -46,7 +46,7 @@ public class DateUtils {
 		Date date = new Date(timeInMillSecond);
 		SimpleDateFormat simpleDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 		
-		simpleDate.setTimeZone(TimeZone.getTimeZone("UTC"));
+		//simpleDate.setTimeZone(TimeZone.getTimeZone("UTC"));
 		
 		String dateString = simpleDate.format(date);
 
