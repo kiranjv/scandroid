@@ -15,6 +15,7 @@ import com.safecell.networking.ExistingTripJsonHandler;
 import com.safecell.networking.NetWork_Information;
 import com.safecell.networking.SubmitNewTripJourney;
 import com.safecell.networking.SubmitNewTripJourneyResponceHandler;
+import com.safecell.networking.TripSyncHandler;
 import com.safecell.receiver.BlockSMSService;
 import com.safecell.receiver.LockKeyPadService;
 import com.safecell.receiver.LockReceiver;
@@ -86,7 +87,7 @@ public class TrackingService extends Service implements LocationListener,
 	public static final int RESPONSE_NULL_WHILE_SAVING = 1;
 	public static final int EXCEPTION_WHILE_SAVING = 2;
 	public static String SELECTED_PROVIDER = null;
-	private static int LOCATION_UPDATE_TIME_INTERVAL = 0; // 0 SEC
+	private static int LOCATION_UPDATE_TIME_INTERVAL = 500; // 0 MilliSEC
 	private static int LOCATION_UPDATE_DISTANCE_INTERVAL = 5; // 2 METERS
 	private static Double latitude = 0.0, longitude = 0.0;
 	private static Location currentLocation;
@@ -381,7 +382,7 @@ public class TrackingService extends Service implements LocationListener,
 					.newUniqueDeviceKey());
 		}
 
-		new TempTripJourneyWayPointsRepository(context).deleteTrip();
+		new TempTripJourneyWayPointsRepository(context).deleteTripWaypoints();
 		new InteruptionRepository(context).deleteInteruptions();
 
 		SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -769,7 +770,7 @@ public class TrackingService extends Service implements LocationListener,
 					}
 
 					resultFlag = true;
-					tempTripJourneyWayPointsRepository.deleteTrip();
+					tempTripJourneyWayPointsRepository.deleteTripWaypoints();
 					Log.d(TAG, "Trip Saved ");
 				} catch (Exception e) {
 					resultFlag = false;
@@ -1369,6 +1370,11 @@ public class TrackingService extends Service implements LocationListener,
 						Util.minitToMilliSeconds(TAGS.tripStopTime));
 			}
 		}
+		
+		/* Sync trip data when when 5 miles traveled.*/
+		if(isTripStarted && (total_distance > 1) && !TripSyncHandler.isPreviousSyncFail) {
+			new TripSyncHandler(context).execute();
+		}
 
 		/* Display trip recording screen if it is not started. */
 		if (isTripStarted) {
@@ -1670,7 +1676,7 @@ public class TrackingService extends Service implements LocationListener,
 				Log.v(TAG, "Clearing local database trip data");
 				TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
 						TrackingService.this);
-				tempTripJourneyWayPointsRepository.deleteTrip();
+				tempTripJourneyWayPointsRepository.deleteTripWaypoints();
 				ir.deleteInteruptions();
 			} else {
 
@@ -1723,7 +1729,7 @@ public class TrackingService extends Service implements LocationListener,
 					Log.v(TAG, "Clearing local database trip data");
 					TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
 							TrackingService.this);
-					tempTripJourneyWayPointsRepository.deleteTrip();
+					tempTripJourneyWayPointsRepository.deleteTripWaypoints();
 					ir.deleteInteruptions();
 
 				}
@@ -1879,7 +1885,7 @@ public class TrackingService extends Service implements LocationListener,
 								case RESPONSE_NULL_WHILE_SAVING:
 									dialog.cancel();
 									tempTripJourneyWayPointsRepository
-											.deleteTrip();
+											.deleteTripWaypoints();
 									if (addTripActivity != null) {
 										addTripActivity.finish();
 									}

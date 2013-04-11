@@ -139,7 +139,7 @@ public class TempTripJourneyWayPointsRepository extends DBAdapter {
 		return isFesibleTimeDiff;
 	}
 
-	public void deleteTrip() {
+	public void deleteTripWaypoints() {
 		Log.v(TAG, "Deleting temporary waypoint from repo");
 		this.deleteQuery("Delete from temp_trip_journey_waypoints");
 	}

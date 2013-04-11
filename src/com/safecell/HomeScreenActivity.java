@@ -368,7 +368,7 @@ public class HomeScreenActivity extends ListActivity {
 
 		TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
 				HomeScreenActivity.this);
-		tempTripJourneyWayPointsRepository.deleteTrip();
+		tempTripJourneyWayPointsRepository.deleteTripWaypoints();
 
 		InteruptionRepository interuptionRepository = new InteruptionRepository(
 				HomeScreenActivity.this);
@@ -655,7 +655,7 @@ public class HomeScreenActivity extends ListActivity {
 			// startActivity(callActivity);
 			// finish();
 
-			tempTripJourneyWayPointsRepository.deleteTrip();
+			tempTripJourneyWayPointsRepository.deleteTripWaypoints();
 			ir.deleteInteruptions();
 		}
 	};

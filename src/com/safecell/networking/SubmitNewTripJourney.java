@@ -74,6 +74,7 @@ public class SubmitNewTripJourney {
 	JSONArray interruptionsJsonArray;
 	String profileName;
 
+	public static boolean is_partial_trip = false;
 	private String TAG = SubmitNewTripJourney.class.getSimpleName();
 
 	// JSONArray wayPointArray, interruptionsJsonArray;
@@ -267,7 +268,7 @@ public class SubmitNewTripJourney {
 
 	}
 
-	public void createJson() {
+	public JSONObject createJson() {
 
 		try {
 			long correctBGFlagsStart = System.currentTimeMillis();
@@ -318,6 +319,7 @@ public class SubmitNewTripJourney {
 				String unique_timeTripID = timestamp + substr;
 				System.out.println("unique_timeTripID: " + unique_timeTripID);
 				jounaryJsonObject.put("originator_token", unique_timeTripID);
+				jounaryJsonObject.put("is_partial_trip", is_partial_trip);
 				Log.d(TAG, "Originator_token = " + unique_timeTripID);
 			}
 
@@ -354,14 +356,16 @@ public class SubmitNewTripJourney {
 			// fileOutputWrite);
 			// outputStreamWriter.append(stringFile);
 			// outputStreamWriter.flush();
+			return outerJsonObject;
 
 		} catch (JSONException e6) {
-
 			e6.printStackTrace();
+			return null;
 		} catch (Exception e) {
-
 			e.printStackTrace();
+			return null;
 		}
+		
 	}
 
 	private void logSaveTripFailureToFlurry(int statusCode) {

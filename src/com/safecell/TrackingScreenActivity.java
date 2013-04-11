@@ -762,7 +762,7 @@ public class TrackingScreenActivity extends Activity {
 									TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
 											TrackingScreenActivity.this);
 									tempTripJourneyWayPointsRepository
-											.deleteTrip();
+											.deleteTripWaypoints();
 									interuptionRepository.deleteInteruptions();
 
 									// Log.v("Safecell",
