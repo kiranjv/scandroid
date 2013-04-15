@@ -51,7 +51,7 @@ public class TripSyncHandler extends AsyncTask<Void, Void, Boolean> {
 	private Integer accountID;
 	private int profileID;
 	private String Failure_MSG = "";
-	public boolean isPreviousSyncFail;
+	public static boolean isPreviousSyncFail = false;
 	private long SYNC_WAIT_TIME_MINITS = 1; //mintis
 
 	public TripSyncHandler(Context context) {

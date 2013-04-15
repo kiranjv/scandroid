@@ -3,7 +3,10 @@ package com.safecell.utilities;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.TimeZone;
+
+import android.util.TimeUtils;
 
 public class DateUtils {
 
@@ -14,7 +17,7 @@ public class DateUtils {
 	public static long dateInMillSecond(String dateString) {		
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 				"yyyy-MM-dd'T'HH:mm:ss'Z'");	
-		simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		//simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 		
 		java.util.Date date=null;
 		try {
@@ -35,6 +38,8 @@ public class DateUtils {
 		Date date = new Date(timeInMillSecond);
 		SimpleDateFormat simpleDate = new SimpleDateFormat(
 		"MMM dd',' yyyy hh:mm a");
+		
+		//simpleDate.setTimeZone(TimeZone.getTimeZone("UTC"));
 		String dateString = simpleDate.format(date);
 		//Log.v("Safecell :"+"Date", dateString);
 		return dateString;
@@ -53,10 +58,22 @@ public class DateUtils {
 		return dateString;
 	}
 	
+	public static  String getTimeStampUTC(long timeInMillSecond) {
+		Date date = new Date(timeInMillSecond);
+		SimpleDateFormat simpleDate = new SimpleDateFormat(
+		"MMM dd',' yyyy hh:mm a");
+		
+		simpleDate.setTimeZone(TimeZone.getTimeZone("UTC"));
+		String dateString = simpleDate.format(date);
+		//Log.v("Safecell :"+"Date", dateString);
+		return dateString;
+	}
+	
 	public static  String getDate(long timeInMillSecond) {
 		//Log.v("Safecell :"+"timeInMillSecond",""+timeInMillSecond);
 		Date date = new Date(timeInMillSecond);
 		SimpleDateFormat simpleDate = new SimpleDateFormat("MMM dd',' yyyy");
+		//simpleDate.setTimeZone(TimeZone.getTimeZone("UTC"));
 		String dateString = simpleDate.format(date);
 		//Log.v("Safecell :"+"Date", dateString);
 		return dateString;

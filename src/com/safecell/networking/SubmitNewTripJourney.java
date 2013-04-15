@@ -3,6 +3,7 @@ package com.safecell.networking;
 import com.safecell.AddTripActivity;
 import com.safecell.HomeScreenActivity;
 import com.safecell.TrackingScreenActivity;
+import com.safecell.TrackingService;
 import com.safecell.dataaccess.InteruptionRepository;
 import com.safecell.dataaccess.TempTripJourneyWayPointsRepository;
 import com.safecell.model.SCWayPoint;
@@ -10,6 +11,7 @@ import com.safecell.utilities.AbondonPinGenerater;
 import com.safecell.utilities.ConfigurePreferences;
 import com.safecell.utilities.DateUtils;
 import com.safecell.utilities.FlurryUtils;
+import com.safecell.utilities.TAGS;
 import com.safecell.utilities.URLs;
 
 import org.apache.http.Header;
@@ -70,12 +72,15 @@ public class SubmitNewTripJourney {
 	private int profileID;
 	private String apiKey;
 	private String tripName, startDateTime, endDateTime;
+	private String startDateTimeUTC;
+	private String endDateTimeUTC;
 	int totalMiles;
 	JSONArray interruptionsJsonArray;
 	String profileName;
 
 	public static boolean is_partial_trip = false;
 	private String TAG = SubmitNewTripJourney.class.getSimpleName();
+	
 
 	// JSONArray wayPointArray, interruptionsJsonArray;
 
@@ -149,9 +154,14 @@ public class SubmitNewTripJourney {
 					if (i == 0) {
 						startDateTime = DateUtils.getTimeStamp(Long
 								.parseLong(cursor.getString(1)));
+						startDateTimeUTC = DateUtils.getTimeStampUTC(Long
+								.parseLong(cursor.getString(1)));
+						
 					}
 					if (i == (cursor.getCount() - 1)) {
 						endDateTime = DateUtils.getTimeStamp(Long
+								.parseLong(cursor.getString(1)));
+						endDateTimeUTC = DateUtils.getTimeStampUTC(Long
 								.parseLong(cursor.getString(1)));
 					}
 
@@ -298,12 +308,20 @@ public class SubmitNewTripJourney {
 			// Toast.makeText(context,
 			// "Interruptions Count = "+interruptionsJsonArray.length(),
 			// Toast.LENGTH_LONG).show();
-			jounaryJsonObject.put("waypoints_attributes", jsonArray);
+			jounaryJsonObject.put("tmpwaypoints_attributes", jsonArray);
 			jounaryJsonObject.put("ended_at", endDateTime);
 			jounaryJsonObject.put("started_at", startDateTime);
-			jounaryJsonObject.put("interruptions_attributes",
+			jounaryJsonObject.put("started_utcat", startDateTimeUTC);
+			jounaryJsonObject.put("ended_utcat", endDateTimeUTC);
+			jounaryJsonObject.put("tmpinterruptions_attributes",
 					interruptionsJsonArray);
-			jounaryJsonObject.put("miles_driven", totalMiles);
+			
+			
+			TempTripJourneyWayPointsRepository tempWayPointRepo = new TempTripJourneyWayPointsRepository(
+					context);
+			double total_miles = tempWayPointRepo.getTotalDistance();
+			TAGS.PREV_SYNC_MILES = TAGS.PREV_SYNC_MILES + total_miles;
+			jounaryJsonObject.put("miles_driven", total_miles);
 			jounaryJsonObject.put("total_points", "null");
 
 			if (!HomeScreenActivity.genereateTripUniqueID()
@@ -313,23 +331,21 @@ public class SubmitNewTripJourney {
 				// token value.
 				String uniqueTripId = HomeScreenActivity
 						.genereateTripUniqueID();
-				String timestamp = String.valueOf(System.currentTimeMillis());
-				String substr = uniqueTripId.substring(timestamp.length(),
-						uniqueTripId.length());
-				String unique_timeTripID = timestamp + substr;
-				System.out.println("unique_timeTripID: " + unique_timeTripID);
-				jounaryJsonObject.put("originator_token", unique_timeTripID);
-				jounaryJsonObject.put("is_partial_trip", is_partial_trip);
-				Log.d(TAG, "Originator_token = " + unique_timeTripID);
+//				String timestamp = String.valueOf(System.currentTimeMillis());
+//				String substr = uniqueTripId.substring(timestamp.length(),
+//						uniqueTripId.length());
+//				String unique_timeTripID = timestamp + substr;
+				System.out.println("unique_timeTripID: " + uniqueTripId);
+				jounaryJsonObject.put("originator_token", uniqueTripId);
+				
+				Log.d(TAG, "Originator_token = " + uniqueTripId);
 			}
 
 			outerjounaryJsonArray.put(jounaryJsonObject);
 
-			if (!AddTripActivity.TripName.equals("")) {
-				tripName = AddTripActivity.TripName;
-			}
-			tripJsonObject.put("name", tripName);
-			tripJsonObject.put("journeys_attributes", outerjounaryJsonArray);
+			tripJsonObject.put("name", TAGS.CURRENT_TRIPNAME);
+			tripJsonObject.put("is_partial_trip", is_partial_trip);
+			tripJsonObject.put("tmpjourneys_attributes", outerjounaryJsonArray);
 
 			// placing abandon data to JSon object
 			boolean is_abondon = new ConfigurePreferences(context)
@@ -473,7 +489,9 @@ public class SubmitNewTripJourney {
 
 		// }
 
-		url = URLs.REMOTE_URL + "api/1/trips?account_id=" + accountID
+//		url = URLs.REMOTE_URL + "api/1/trips?account_id=" + accountID
+//				+ "&profile_id=" + profileID;
+		url = URLs.REMOTE_URL + "api/1/triplogs?account_id=" + accountID
 				+ "&profile_id=" + profileID;
 		Log.v(TAG, "ORDINARRY URL: " + url);
 		HttpPost post = new HttpPost(url);

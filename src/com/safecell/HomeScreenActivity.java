@@ -450,8 +450,11 @@ public class HomeScreenActivity extends ListActivity {
 				int points = cursorTripJounery.getInt(pointsIndex);
 				long tripDate = cursorTripJounery.getLong(trip_dateIndex);
 
+				
+				
+				
 				String formatTripDate = DateUtils.dateInString(tripDate);
-
+				Log.e(TAG, "(Milli)tripDate: "+tripDate+" formatedTripDate: "+formatTripDate);
 				pointsArray[arrayIndex] = points;
 				milesArray[arrayIndex] = miles + " Total Miles";
 				tripRecordedDateArray[arrayIndex] = formatTripDate;

@@ -3,6 +3,8 @@
  */
 package com.safecell.utilities;
 
+import org.json.JSONObject;
+
 /**
  * @author treewalker
  * 
@@ -43,6 +45,12 @@ public class TAGS {
 	public static boolean logWayPoints = true;
 
 	public static boolean keypadLock = true;
+
+	public static double TRIP_SYNC_DISTANCE = 2;
+
+	public static String CURRENT_TRIPNAME = "";
+
+	public static double PREV_SYNC_MILES = 0;
 	
 
 }

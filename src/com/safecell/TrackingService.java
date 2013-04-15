@@ -370,6 +370,9 @@ public class TrackingService extends Service implements LocationListener,
 		// Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
 		// Toast.LENGTH_LONG).show();
 
+		String tripName = "";
+		tripName = "Trip On " + getTodaysDate();
+		TAGS.CURRENT_TRIPNAME = tripName;
 		Log.v(TAG, "Setting ShutDown Flag");
 		new ConfigurePreferences(context).isShutDown(true);
 
@@ -378,8 +381,13 @@ public class TrackingService extends Service implements LocationListener,
 
 		/** change unique ID for trip saving **/
 		if (HomeScreenActivity.genereateTripUniqueID().equalsIgnoreCase("")) {
-			HomeScreenActivity.editGenereateTripUniqueID(SCProfile
-					.newUniqueDeviceKey());
+
+			String timestamp = String.valueOf(System.currentTimeMillis());
+			String key = SCProfile.newUniqueDeviceKey();
+			// String substr = uniqueTripId.substring(timestamp.length(),
+			// uniqueTripId.length());
+			// String unique_timeTripID = timestamp + substr;
+			HomeScreenActivity.editGenereateTripUniqueID(timestamp + key);
 		}
 
 		new TempTripJourneyWayPointsRepository(context).deleteTripWaypoints();
@@ -642,8 +650,6 @@ public class TrackingService extends Service implements LocationListener,
 		String apiKey = "";
 		int accountID = 0;
 		int profileID = 0;
-		String tripName = "";
-		tripName = "Trip On " + getTodaysDate();
 
 		int totalMiles = getTotalDistance();
 		HashMap<Object, Object> ApikeyAndAccountId = new HashMap<Object, Object>();
@@ -672,9 +678,11 @@ public class TrackingService extends Service implements LocationListener,
 
 		Log.v(TAG, "Trip Total distance traveled: " + TotalDistatnce);
 
+		double current_distance = TotalDistatnce + TAGS.PREV_SYNC_MILES;
+
 		if (BootReceiver.SHUTDOWNSAVE
-				|| (!(TotalDistatnce < 1) && ConfigurationHandler.getInstance()
-						.getConfiguration().isLogWayPoints())) {
+				|| (!(current_distance < 1) && ConfigurationHandler
+						.getInstance().getConfiguration().isLogWayPoints())) {
 
 			Log.v(TAG, "Trip distance is more than 1km");
 			TrackingScreenActivity.isTripSavingInProgress = true;
@@ -702,7 +710,7 @@ public class TrackingService extends Service implements LocationListener,
 
 			SubmitNewTripJourney submitNewTripJourney = new SubmitNewTripJourney(
 					getApplicationContext(), accountID, profileID, apiKey,
-					tripName, totalMiles, name);
+					TAGS.CURRENT_TRIPNAME, totalMiles, name);
 
 			long createJsonStart = System.currentTimeMillis();
 			submitNewTripJourney.createJson();
@@ -719,8 +727,6 @@ public class TrackingService extends Service implements LocationListener,
 
 				int json_no = tripJsonRepository.getNumberOfTripJsons();
 				Log.e(TAG, "TOTAL JSON IN DATABASE: " + json_no);
-
-
 
 			}
 
@@ -1268,11 +1274,15 @@ public class TrackingService extends Service implements LocationListener,
 		double total_distance = tempTripJourneyWayPointsRepository
 				.getTotalDistance();
 
+		if (timeDifference != 0) {
+			speed = distanceInMiles / timeDifference;
+		}
 		Log.d(TAG, "Average Speed " + avarageSpeed);
 		Log.d(TAG, "Distance Travelled = " + total_distance);
+		Log.d(TAG, "Speed = " + speed);
 
 		if (!new ConfigurePreferences(context).isTripAbandon()) {
-			// Toast.makeText(context, "Avg speed: " + avarageSpeed,
+			// Toast.makeText(context, "Avg speed: " + avarageSpeed+" speed:"+speed,
 			// 300).show();
 		}
 		SharedPreferences sharedPreferences = getSharedPreferences("TRIP",
@@ -1324,10 +1334,6 @@ public class TrackingService extends Service implements LocationListener,
 			cancelAutoTripStartTimer();
 		}
 
-		if (timeDifference != 0) {
-			speed = distanceInMiles / timeDifference;
-		}
-
 		if (speed > IGNORE_WAYPOINT_SPEED_LIMIT && timeDifference != 0) {
 			Log.i(TAG, "Speed is too belond waypoint speed =" + speed);
 			return;
@@ -1342,7 +1348,7 @@ public class TrackingService extends Service implements LocationListener,
 		if (!isTripStarted) {
 
 			SCWayPoint wayPoint = new SCWayPoint(0, 0,
-					DateUtils.getTimeStamp(currentTime),
+					DateUtils.getTimeStamp(System.currentTimeMillis()),
 					location.getLatitude(), location.getLongitude(), speed,
 					background);
 			Log.d(TAG, "Inserting way points for journey = " + 0);
@@ -1370,9 +1376,10 @@ public class TrackingService extends Service implements LocationListener,
 						Util.minitToMilliSeconds(TAGS.tripStopTime));
 			}
 		}
-		
-		/* Sync trip data when when 5 miles traveled.*/
-		if(isTripStarted && (total_distance > 1) && !TripSyncHandler.isPreviousSyncFail) {
+
+		/* Sync trip data when when 5 miles traveled. */
+		if (isTripStarted && (total_distance > TAGS.TRIP_SYNC_DISTANCE)
+				&& !TripSyncHandler.isPreviousSyncFail) {
 			new TripSyncHandler(context).execute();
 		}
 
@@ -1483,8 +1490,8 @@ public class TrackingService extends Service implements LocationListener,
 						.getService_center());
 				values.put("locked", smsArrayList.get(i).getLocked());
 
-//				context.getContentResolver().insert(Uri.parse("content://sms"),
-//						values);
+				// context.getContentResolver().insert(Uri.parse("content://sms"),
+				// values);
 			}
 			smsRepository.deleteSms();
 			smsPresent = true;
@@ -1600,7 +1607,7 @@ public class TrackingService extends Service implements LocationListener,
 			try {
 				/* again clears the idle timmer */
 				clearDeviceIdleTimer();
-				
+
 				if (!new ConfigurePreferences(context).isTripAbandon()
 						&& trackingScreenActivity != null
 						&& !BootReceiver.SHUTDOWNSAVE) {
@@ -1678,6 +1685,9 @@ public class TrackingService extends Service implements LocationListener,
 						TrackingService.this);
 				tempTripJourneyWayPointsRepository.deleteTripWaypoints();
 				ir.deleteInteruptions();
+
+				// clear prev trip sync distance
+				TAGS.PREV_SYNC_MILES = 0;
 			} else {
 
 				if (!result) {
@@ -1731,7 +1741,8 @@ public class TrackingService extends Service implements LocationListener,
 							TrackingService.this);
 					tempTripJourneyWayPointsRepository.deleteTripWaypoints();
 					ir.deleteInteruptions();
-
+					// clear prev trip sync distance
+					TAGS.PREV_SYNC_MILES = 0;
 				}
 
 			}
