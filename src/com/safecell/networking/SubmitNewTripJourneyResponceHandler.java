@@ -9,6 +9,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import android.R.bool;
 import android.content.Context;
@@ -31,6 +33,11 @@ import com.safecell.utilities.DateUtils;
 import com.safecell.utilities.StreamToStringHelper;
 
 public class SubmitNewTripJourneyResponceHandler {
+	
+	static private final Logger logger = LoggerFactory
+			.getLogger(SubmitNewTripJourneyResponceHandler.class);
+	
+	
 	private Context context;
 	private String TAG = SubmitNewTripJourneyResponceHandler.class.getSimpleName();
 	public SubmitNewTripJourneyResponceHandler(Context context) {
@@ -50,6 +57,7 @@ public class SubmitNewTripJourneyResponceHandler {
 
 					String result = StreamToStringHelper.convertStreamToString(in);					
 					Log.d(TAG, "Got result from server " + result);
+					logger.debug("Server respopnse data:\n "+result);
 					/*
 					FileOutputStream  fileOutputWrite = context.openFileOutput("Submit Trip Response",Context.MODE_APPEND);
 					OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputWrite);

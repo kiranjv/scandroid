@@ -18,7 +18,8 @@ public class SchoolsDownload {
 	private String TAG = SchoolsDownload.class.getSimpleName();
 	private Location lastSchoolDownLoadLocation;
 	private final double SCHOOL_UPDATE_RADIUS = 5;
-	private final double SCHOOL_NEAR_RANGE = 300;
+	/* Distance from school zone in meters */
+	private final double SCHOOL_NEAR_RANGE = 200;
 	private double distanceSinceLastDownload;
 
 	private GetSchools downloadSchools;
@@ -167,7 +168,7 @@ public class SchoolsDownload {
 							location.getLatitude(), location.getLongitude(),
 							school.getLatitude(), school.getLongitude());
 					double distance = (1609.344) * distanceFromSchool;
-					// 1 mile = 1 609.344 meters
+					// 1 mile = 1609.344 meters
 					Log.d(TAG, "DistanceFromSchool: " + distance);
 					if (distance < SCHOOL_NEAR_RANGE) {
 						Log.v(TAG, "Is School Zone Active: " + "Yes");

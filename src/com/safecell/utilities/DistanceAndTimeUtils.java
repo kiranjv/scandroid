@@ -14,6 +14,16 @@ public class DistanceAndTimeUtils {
 		
 		
 	}
+	
+	/***
+	 * Calculates distance between locations in miles.
+	 * 1 mile = 1609.344 meters
+	 * @param startLat
+	 * @param startLong
+	 * @param endLat
+	 * @param endLong
+	 * @return
+	 */
 	public static double distFrom(double startLat, double startLong,
 			double endLat, double endLong) {
 		

@@ -31,6 +31,8 @@ import org.apache.http.protocol.HttpContext;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -59,6 +61,9 @@ import java.util.zip.GZIPOutputStream;
  */
 public class SubmitNewTripJourney {
 
+	static private final Logger logger = LoggerFactory
+			.getLogger(SubmitNewTripJourney.class);
+	
 	private Resources resources;
 	private JSONArray wayPointArray, jsonArray;
 	Context context;
@@ -365,7 +370,7 @@ public class SubmitNewTripJourney {
 			outerJsonObject.put("trip", tripJsonObject);
 			String stringFile = outerJsonObject.toString();
 			Log.v(TAG, "Sending Json object = " + stringFile);
-
+			logger.debug("Trip json: \n"+stringFile);
 			// FileOutputStream fileOutputWrite = context.openFileOutput(
 			// "Submit Trip Request", Context.MODE_APPEND);
 			// OutputStreamWriter outputStreamWriter = new OutputStreamWriter(

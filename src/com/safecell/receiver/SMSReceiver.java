@@ -182,7 +182,7 @@ public class SMSReceiver extends BroadcastReceiver {
 					}
 				}
 
-				this.abortBroadcast();
+				//this.abortBroadcast();
 
 			}
 		}

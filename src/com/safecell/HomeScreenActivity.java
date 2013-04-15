@@ -7,6 +7,8 @@ import java.io.File;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -79,6 +81,10 @@ import com.safecell.utilities.URLs;
 import com.safecell.utilities.Util;
 
 public class HomeScreenActivity extends ListActivity {
+	
+	static private final Logger LOG =
+            LoggerFactory.getLogger(HomeScreenActivity.class);
+	
 	/** Called when the activity is first created. **/
 	Button startNewTripButton, homeButton, btnMyTrips, rulesButton, faxButton;
 	TextView tvTotalTrips, tvGrade, tvTotalMiles;
@@ -125,10 +131,13 @@ public class HomeScreenActivity extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
+		
+		
 		// android:background="@drawable/stop_button"
 
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
+		
 		Log.v(TAG, "on create");
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setWindowAnimations(R.anim.null_animation);

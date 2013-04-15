@@ -21,6 +21,7 @@ import com.safecell.receiver.LockKeyPadService;
 import com.safecell.receiver.LockReceiver;
 import com.safecell.utilities.ConfigurePreferences;
 import com.safecell.utilities.DateUtils;
+import com.safecell.utilities.DistanceAndTimeUtils;
 import com.safecell.utilities.InformatonUtils;
 import com.safecell.utilities.LocationSP;
 import com.safecell.utilities.StateAddress;
@@ -31,6 +32,8 @@ import com.safecell.utilities.Util;
 import org.apache.http.HttpResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -75,6 +78,9 @@ import java.util.TimerTask;
 
 public class TrackingService extends Service implements LocationListener,
 		NmeaListener {
+
+	static private final Logger logger = LoggerFactory
+			.getLogger(TrackingService.class);
 
 	public static final String GPS_PROVIDER_DISPLAY_TEXT = "GPS Satellite";
 	public static final String NETWORK_PROVIDER_DISPLAY_TEXT = "Network";
@@ -366,6 +372,7 @@ public class TrackingService extends Service implements LocationListener,
 
 	private void autoStartTrip() {
 		Log.d(TAG, "Auto Start Trip Started ");
+		logger.debug("Trip started.");
 		// foregroundService("Auto trip started");
 		// Toast.makeText(getApplicationContext(), "Auto Start Trip Started",
 		// Toast.LENGTH_LONG).show();
@@ -685,6 +692,7 @@ public class TrackingService extends Service implements LocationListener,
 						.getInstance().getConfiguration().isLogWayPoints())) {
 
 			Log.v(TAG, "Trip distance is more than 1km");
+			logger.debug("Trip distance "+current_distance+" is more than 1km.");
 			TrackingScreenActivity.isTripSavingInProgress = true;
 
 			insertIntoSMS();
@@ -717,7 +725,7 @@ public class TrackingService extends Service implements LocationListener,
 			long createJsonEnd = System.currentTimeMillis();
 			long createJsonTime = (createJsonEnd - createJsonStart) / 1000;
 			Log.e(TAG, "Json create time: " + createJsonTime);
-
+			logger.debug("Json creation time: "+createJsonTime);
 			if (NO_INTERNET_SAVE) {
 				Log.e(TAG, "NO_INTERNET_SAVE Json created: " + createJsonTime);
 				TripJsonRepository tripJsonRepository = new TripJsonRepository(
@@ -745,11 +753,13 @@ public class TrackingService extends Service implements LocationListener,
 			long serverTime = (sendHTTPEnd - sendHTTPStart) / 1000;
 			Log.e(TAG, "HTTP Process time: " + serverTime);
 			Log.v(TAG, "IhttpResponse: " + httpResponse);
+			logger.debug("Server process time: "+serverTime);
 			if (httpResponse == null) {
 
 				Log.e(TAG,
 						"Unexepted error occure while saving the trip. Response:"
 								+ httpResponse);
+				logger.error("Server response is null");
 				// showNotification("Unexepted error occure while saving the trip.");
 				// tripNotSaveDialog(frontScreenActivity,
 				// RESPONSE_NULL_WHILE_SAVING);
@@ -759,6 +769,7 @@ public class TrackingService extends Service implements LocationListener,
 				Log.v(TAG, " Response code:"
 						+ httpResponse.getStatusLine().toString());
 
+				logger.debug("Server response code: "+ httpResponse.getStatusLine().toString());
 				SubmitNewTripJourneyResponceHandler submitNewTripJourneyResponceHandler = new SubmitNewTripJourneyResponceHandler(
 						TrackingService.this);
 				try {
@@ -773,6 +784,7 @@ public class TrackingService extends Service implements LocationListener,
 						long parseRespEnd = System.currentTimeMillis();
 						long parseRespTime = (parseRespEnd - parseRespStart) / 1000;
 						Log.e(TAG, "Parse response time: " + parseRespTime);
+						logger.debug("Parse server response time: "+parseRespTime);
 					}
 
 					resultFlag = true;
@@ -863,6 +875,7 @@ public class TrackingService extends Service implements LocationListener,
 
 		if (NetWork_Information.isNetworkAvailable(context)) {
 			Log.d(TAG, "Trip Saving");
+			logger.debug("Trip saving.");
 			if (!new ConfigurePreferences(context).isTripAbandon()) {
 				Toast.makeText(TrackingService.context, "Saving Trip",
 						Toast.LENGTH_LONG).show();
@@ -874,6 +887,7 @@ public class TrackingService extends Service implements LocationListener,
 		} else {
 			if (NO_INTERNET_SAVE) {
 				Log.d(TAG, "Trip Saving withouot internet");
+				logger.debug("Trip saving without internet.");
 				if (!new ConfigurePreferences(context).isTripAbandon()) {
 					Toast.makeText(TrackingService.context,
 							"Trip Saving withouot internet", Toast.LENGTH_LONG)
@@ -977,7 +991,9 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d(TAG, "Location Changed");
 		Log.d(TAG, "Longitude  " + location.getLongitude() + " Latitude "
 				+ location.getLatitude());
-
+		logger.debug("-------------------------------------------");
+		logger.debug("Longitude  " + location.getLongitude() + " Latitude "
+				+ location.getLatitude());
 		// Ignore way point Emergency call in active and trip not started
 		if (new ConfigurePreferences(context).getEmergencyTRIPSAVE()
 				&& !new ConfigurePreferences(context).getTripStrated()) {
@@ -1056,6 +1072,20 @@ public class TrackingService extends Service implements LocationListener,
 			lastDistanceInMiles = 0;
 		}
 		if (currentLocation != null) {
+			// distance from current location and prev location
+			double curt_prev_distance = DistanceAndTimeUtils.distFrom(currentLocation.getLatitude(),
+					currentLocation.getLongitude(), location.getLatitude(),
+					location.getLongitude());
+			
+			Log.d(TAG, "current and prev location distance: "+curt_prev_distance+ " miles");
+			logger.debug("current and prev location distance: "+curt_prev_distance+ " miles");
+			
+			if(curt_prev_distance >= TAGS.LOCATION_DISTANCE_THRESHOLD) {
+				Log.d(TAG, "Ignoring sudden location update. ");
+				logger.debug("Ignoring sudden location update. ");
+			}
+			
+			
 			lastDistanceInMiles += (location.distanceTo(currentLocation));
 		}
 
@@ -1122,30 +1152,38 @@ public class TrackingService extends Service implements LocationListener,
 
 	@Override
 	public void onProviderDisabled(String provider) {
-		Log.v(TAG, "onProviderDisabled: SELECTED_PROVIDER: "
+		Log.e(TAG, "onProviderDisabled: SELECTED_PROVIDER: "
 				+ SELECTED_PROVIDER + " provider " + provider);
+		logger.info(" provider " + provider +" disabled");
 		selectBestLocationProvider();
 
 	}
 
 	@Override
 	public void onProviderEnabled(String provider) {
-		Log.v(TAG, "onProviderEnabled: SELECTED_PROVIDER: " + SELECTED_PROVIDER
+		Log.e(TAG, "onProviderEnabled: SELECTED_PROVIDER: " + SELECTED_PROVIDER
 				+ " provider " + provider);
+		logger.info(" provider " + provider +" enabled");
 		selectBestLocationProvider();
 	}
 
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
-		Log.v(TAG, "onStatusChanged: SELECTED_PROVIDER: " + SELECTED_PROVIDER
+		Log.e(TAG, "onStatusChanged: SELECTED_PROVIDER: " + SELECTED_PROVIDER
 				+ " provider " + provider);
 		if (provider.equals(SELECTED_PROVIDER)) {
 			switch (status) {
 			case LocationProvider.OUT_OF_SERVICE:
+				Log.e(TAG, " provider " + provider +" out of service");
+				logger.info( " provider " + provider +" out of service");
+				break;
 			case LocationProvider.TEMPORARILY_UNAVAILABLE:
+				Log.e(TAG, " provider " + provider +" unavailable");
+				logger.info(" provider " + provider +" unavailable");
 				// showNotification("GPS updates are unavailable.");
 				break;
 			case LocationProvider.AVAILABLE:
+				logger.info(" provider " + provider +" available");
 				if (!InformatonUtils.isServiceRunning(getApplicationContext())) {
 					Log.d(TAG, "Configuration");
 					configureLocationManager();
@@ -1280,11 +1318,15 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d(TAG, "Average Speed " + avarageSpeed);
 		Log.d(TAG, "Distance Travelled = " + total_distance);
 		Log.d(TAG, "Speed = " + speed);
-
+		logger.debug("Average Speed " + avarageSpeed+" Distance Travelled = " + total_distance+" Speed = " + speed);
+		
+		
 		if (!new ConfigurePreferences(context).isTripAbandon()) {
-			// Toast.makeText(context, "Avg speed: " + avarageSpeed+" speed:"+speed,
+			// Toast.makeText(context, "Avg speed: " +
+			// avarageSpeed+" speed:"+speed,
 			// 300).show();
 		}
+		
 		SharedPreferences sharedPreferences = getSharedPreferences("TRIP",
 				MODE_WORLD_READABLE);
 		isTripStarted = sharedPreferences.getBoolean("isTripStarted", false);
@@ -1298,6 +1340,7 @@ public class TrackingService extends Service implements LocationListener,
 			int num_trips = json_repo.getNumberOfTripJsons();
 			if (num_trips > 0) {
 				Log.d(TAG, "Previous trips exist's. Saving the trip.");
+				logger.debug("Previous trips exist's. Saving the trip.");
 				new ExistingTripJsonHandler(context).postAllTripJsons();
 			}
 		}
@@ -1380,6 +1423,7 @@ public class TrackingService extends Service implements LocationListener,
 		/* Sync trip data when when 5 miles traveled. */
 		if (isTripStarted && (total_distance > TAGS.TRIP_SYNC_DISTANCE)
 				&& !TripSyncHandler.isPreviousSyncFail) {
+			logger.debug("Trip data is syncing.");
 			new TripSyncHandler(context).execute();
 		}
 
@@ -1681,6 +1725,7 @@ public class TrackingService extends Service implements LocationListener,
 				}
 
 				Log.v(TAG, "Clearing local database trip data");
+				logger.debug("Clearing local trip data");
 				TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
 						TrackingService.this);
 				tempTripJourneyWayPointsRepository.deleteTripWaypoints();
@@ -1705,6 +1750,7 @@ public class TrackingService extends Service implements LocationListener,
 					//
 					if (!new ConfigurePreferences(context).isTripAbandon()) {
 						Log.v(TAG, "Trip fail to save");
+						logger.debug("Trip failed to save");
 						Toast.makeText(TrackingService.context,
 								"Trip fail to save", Toast.LENGTH_LONG).show();
 						// foregroundService("Trip Save Failed. ");
@@ -1717,6 +1763,7 @@ public class TrackingService extends Service implements LocationListener,
 					// }
 				} else {
 					Log.d(TAG, "Trip Saved Sucessfully: " + result);
+					logger.debug("Trip saved sucessfully");
 					if (!new ConfigurePreferences(context).isTripAbandon()) {
 						Log.v(TAG, "Trip saved sucessfully");
 						Toast.makeText(TrackingService.context,

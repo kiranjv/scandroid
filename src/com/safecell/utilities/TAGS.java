@@ -25,6 +25,8 @@ public class TAGS {
 
 	public static final String TAG_MANAGER = "Cannot login with Manager Account. Please provide a registered device user.";
 
+	
+
 	public static String CONTORL_NUMBER = "+918971855771";
 
 	public static boolean SHOW_SPLASH = true;
@@ -46,11 +48,13 @@ public class TAGS {
 
 	public static boolean keypadLock = true;
 
-	public static double TRIP_SYNC_DISTANCE = 2;
+	public static double TRIP_SYNC_DISTANCE = 2; // Miles
 
 	public static String CURRENT_TRIPNAME = "";
 
 	public static double PREV_SYNC_MILES = 0;
+	
+	public static final double LOCATION_DISTANCE_THRESHOLD = 0.08; //miles
 	
 
 }
