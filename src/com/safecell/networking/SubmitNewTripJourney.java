@@ -63,7 +63,7 @@ public class SubmitNewTripJourney {
 
 	static private final Logger logger = LoggerFactory
 			.getLogger(SubmitNewTripJourney.class);
-	
+
 	private Resources resources;
 	private JSONArray wayPointArray, jsonArray;
 	Context context;
@@ -85,7 +85,6 @@ public class SubmitNewTripJourney {
 
 	public static boolean is_partial_trip = false;
 	private String TAG = SubmitNewTripJourney.class.getSimpleName();
-	
 
 	// JSONArray wayPointArray, interruptionsJsonArray;
 
@@ -107,8 +106,7 @@ public class SubmitNewTripJourney {
 		this.profileName = profileName;
 
 	}
-	
-	
+
 	public SubmitNewTripJourney(Context context, int accountID, int profileID,
 			String apiKey) {
 		interruptionsJsonArray = new JSONArray();
@@ -117,7 +115,6 @@ public class SubmitNewTripJourney {
 		this.accountID = accountID;
 		this.profileID = profileID;
 		this.apiKey = apiKey;
-		
 
 	}
 
@@ -161,7 +158,7 @@ public class SubmitNewTripJourney {
 								.parseLong(cursor.getString(1)));
 						startDateTimeUTC = DateUtils.getTimeStampUTC(Long
 								.parseLong(cursor.getString(1)));
-						
+
 					}
 					if (i == (cursor.getCount() - 1)) {
 						endDateTime = DateUtils.getTimeStamp(Long
@@ -283,6 +280,105 @@ public class SubmitNewTripJourney {
 
 	}
 
+	/** Creates normal json supported by trips & abandon trip controller. */
+	public void createNormalJson() {
+
+		try {
+			long correctBGFlagsStart = System.currentTimeMillis();
+			correctBackgroundFlags();
+			long correctBGFlagsEnd = System.currentTimeMillis();
+			long correctBGFlagsTime = (correctBGFlagsEnd - correctBGFlagsStart);
+			Log.e(TAG, "correctBGFlagsTime : " + correctBGFlagsTime);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		jsonArray = readWayPoints();
+
+		// jsonArray = wayPointArray
+		// getTotalDistance();
+		// JSONArray wayPointArray, interruptionsJsonArray;
+		outerJsonObject = new JSONObject();
+		JSONObject tripJsonObject = new JSONObject();
+		JSONObject jounaryJsonObject = new JSONObject();
+
+		JSONArray outerjounaryJsonArray = new JSONArray();
+
+		try {
+			Log.d(TAG,
+					"Nuber of interruptions: "
+							+ interruptionsJsonArray.length());
+			// Toast.makeText(context,
+			// "Interruptions Count = "+interruptionsJsonArray.length(),
+			// Toast.LENGTH_LONG).show();
+			jounaryJsonObject.put("waypoints_attributes", jsonArray);
+			jounaryJsonObject.put("ended_at", endDateTime);
+			jounaryJsonObject.put("started_at", startDateTime);
+			jounaryJsonObject.put("interruptions_attributes",
+					interruptionsJsonArray);
+			jounaryJsonObject.put("miles_driven", totalMiles);
+			jounaryJsonObject.put("total_points", "null");
+
+			if (!HomeScreenActivity.genereateTripUniqueID()
+					.equalsIgnoreCase("")) {
+
+				// Code modification done by kiran - add timestamp to originator
+				// token value.
+				String uniqueTripId = HomeScreenActivity
+						.genereateTripUniqueID();
+				String timestamp = String.valueOf(System.currentTimeMillis());
+				String substr = uniqueTripId.substring(timestamp.length(),
+						uniqueTripId.length());
+				String unique_timeTripID = timestamp + substr;
+				System.out.println("unique_timeTripID: " + unique_timeTripID);
+				jounaryJsonObject.put("originator_token", unique_timeTripID);
+				Log.d(TAG, "Originator_token = " + unique_timeTripID);
+			}
+
+			outerjounaryJsonArray.put(jounaryJsonObject);
+
+			if (!AddTripActivity.TripName.equals("")) {
+				tripName = AddTripActivity.TripName;
+			}
+			tripJsonObject.put("name", tripName);
+			tripJsonObject.put("journeys_attributes", outerjounaryJsonArray);
+
+			// placing abandon data to JSon object
+			boolean is_abondon = new ConfigurePreferences(context)
+					.getSAVETRIP();
+
+			// false mean trip is abandoned
+			if (!is_abondon && TrackingScreenActivity.Abondon_Details != null) {
+				Log.v(TAG, "Adding abondon details to JSON");
+				tripJsonObject.put("is_abandon_trip", true);
+				// tripJsonObject.put("profile_id",
+				// TrackingScreenActivity.Abondon_Details.getProfile_id());
+				// tripJsonObject.put("manager_id",
+				// TrackingScreenActivity.Abondon_Details.getManager_id());
+				// tripJsonObject.put("tripdate",
+				// new Date(System.currentTimeMillis()).toGMTString());
+			}
+			outerJsonObject.put("trip", tripJsonObject);
+			String stringFile = outerJsonObject.toString();
+			Log.v(TAG, "Sending Json object = " + stringFile);
+			logger.debug("Abandon Trip Json: \n" + stringFile);
+			// FileOutputStream fileOutputWrite = context.openFileOutput(
+			// "Submit Trip Request", Context.MODE_APPEND);
+			// OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
+			// fileOutputWrite);
+			// outputStreamWriter.append(stringFile);
+			// outputStreamWriter.flush();
+
+		} catch (JSONException e6) {
+
+			e6.printStackTrace();
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
+	}
+
+	/** Creates json supported by triplogs controller. */
 	public JSONObject createJson() {
 
 		try {
@@ -320,8 +416,7 @@ public class SubmitNewTripJourney {
 			jounaryJsonObject.put("ended_utcat", endDateTimeUTC);
 			jounaryJsonObject.put("tmpinterruptions_attributes",
 					interruptionsJsonArray);
-			
-			
+
 			TempTripJourneyWayPointsRepository tempWayPointRepo = new TempTripJourneyWayPointsRepository(
 					context);
 			double total_miles = tempWayPointRepo.getTotalDistance();
@@ -336,13 +431,14 @@ public class SubmitNewTripJourney {
 				// token value.
 				String uniqueTripId = HomeScreenActivity
 						.genereateTripUniqueID();
-//				String timestamp = String.valueOf(System.currentTimeMillis());
-//				String substr = uniqueTripId.substring(timestamp.length(),
-//						uniqueTripId.length());
-//				String unique_timeTripID = timestamp + substr;
+				// String timestamp =
+				// String.valueOf(System.currentTimeMillis());
+				// String substr = uniqueTripId.substring(timestamp.length(),
+				// uniqueTripId.length());
+				// String unique_timeTripID = timestamp + substr;
 				System.out.println("unique_timeTripID: " + uniqueTripId);
 				jounaryJsonObject.put("originator_token", uniqueTripId);
-				
+
 				Log.d(TAG, "Originator_token = " + uniqueTripId);
 			}
 
@@ -360,17 +456,21 @@ public class SubmitNewTripJourney {
 			if (!is_abondon && TrackingScreenActivity.Abondon_Details != null) {
 				Log.v(TAG, "Adding abondon details to JSON");
 				tripJsonObject.put("is_abandon_trip", true);
+				tripJsonObject.put("abandon_reason", TAGS.ABANDON_REASON);
+				
 				// tripJsonObject.put("profile_id",
 				// TrackingScreenActivity.Abondon_Details.getProfile_id());
 				// tripJsonObject.put("manager_id",
 				// TrackingScreenActivity.Abondon_Details.getManager_id());
 				// tripJsonObject.put("tripdate",
 				// new Date(System.currentTimeMillis()).toGMTString());
+			} else {
+				tripJsonObject.put("is_abandon_trip", false);
 			}
 			outerJsonObject.put("trip", tripJsonObject);
 			String stringFile = outerJsonObject.toString();
 			Log.v(TAG, "Sending Json object = " + stringFile);
-			logger.debug("Trip json: \n"+stringFile);
+			logger.debug("Trip json: \n" + stringFile);
 			// FileOutputStream fileOutputWrite = context.openFileOutput(
 			// "Submit Trip Request", Context.MODE_APPEND);
 			// OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
@@ -386,7 +486,7 @@ public class SubmitNewTripJourney {
 			e.printStackTrace();
 			return null;
 		}
-		
+
 	}
 
 	private void logSaveTripFailureToFlurry(int statusCode) {
@@ -481,23 +581,23 @@ public class SubmitNewTripJourney {
 
 		String url = "";
 
-		// if (!new ConfigurePreferences(context).getSAVETRIP()) {
-		// Log.v(TAG, "Trip Abondon. Save date in abondon table");
-		// url = URLs.REMOTE_URL + "api/1/abandontrips?account_id="
-		// + accountID + "&profile_id=" + profileID;
-		// Log.v(TAG, "ABONDON URL: " + url);
-		// } else {
-		// Log.v(TAG, "Trip is not Abondon. Save date in original table");
+//		if (!new ConfigurePreferences(context).getSAVETRIP() || new ConfigurePreferences(context).isTripAbandon()) {
+//			Log.v(TAG, "Trip Abondon. Save date in abondon table");
+//			url = URLs.REMOTE_URL + "api/1/trips?account_id="
+//					+ accountID + "&profile_id=" + profileID;
+//			Log.v(TAG, "ABONDON URL: " + url);
+//		} else {
+//			Log.v(TAG, "Trip is not Abondon. Save date in original table");
+//			url = URLs.REMOTE_URL + "api/1/triplogs?account_id=" + accountID
+//					+ "&profile_id=" + profileID;
+//			Log.v(TAG, "ORDINARRY URL: " + url);
+//
+//		}
+
 		// url = URLs.REMOTE_URL + "api/1/trips?account_id=" + accountID
 		// + "&profile_id=" + profileID;
-		// Log.v(TAG, "ORDINARRY URL: " + url);
-
-		// }
-
-//		url = URLs.REMOTE_URL + "api/1/trips?account_id=" + accountID
-//				+ "&profile_id=" + profileID;
-		url = URLs.REMOTE_URL + "api/1/triplogs?account_id=" + accountID
-				+ "&profile_id=" + profileID;
+		 url = URLs.REMOTE_URL + "api/1/triplogs?account_id=" + accountID
+		 + "&profile_id=" + profileID;
 		Log.v(TAG, "ORDINARRY URL: " + url);
 		HttpPost post = new HttpPost(url);
 		// System.out.println(url);

@@ -156,6 +156,8 @@ public class TrackingScreenActivity extends Activity {
 	public static boolean KEYPAD_LOCK_DESTROY = false;
 
 	public static SpeechSynthesis synthesis = null;
+	
+	private String[] TurnOffMsgs = {"Request approval", "I am not driving"};
 
 	boolean mBounded;
 
@@ -703,8 +705,7 @@ public class TrackingScreenActivity extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			Log.d(TAG, "Start abondon activity");
-			abondonTrip();
+			tirpTurnOffDialog(TurnOffMsgs);
 
 		}
 	};
@@ -1094,6 +1095,96 @@ public class TrackingScreenActivity extends Activity {
 				Intent.createChooser(emailIntent, "Send mail..."), 1);
 	}
 
+	public void tirpTurnOffDialog(final CharSequence[] items) {
+
+		AlertDialog.Builder builder = new AlertDialog.Builder(
+				TrackingScreenActivity.this);
+		builder.setTitle("Abandon Trip");
+
+		builder.setItems(items, new DialogInterface.OnClickListener() {
+			
+
+			public void onClick(DialogInterface dialog, int item) {
+
+				String req_type = TurnOffMsgs [item];
+				Log.v(TAG, "Turn off type: "+req_type);
+				if(req_type.equalsIgnoreCase(TurnOffMsgs[0]))
+				{
+					Log.d(TAG, "Start abondon activity");
+					TAGS.ABANDON_REASON = "Request approval";
+					abondonTrip();
+				} else if(req_type.equalsIgnoreCase(TurnOffMsgs[1])) {
+					if (trackingService != null) {
+						
+						// Disable SAVE TRIP Flag.
+						new ConfigurePreferences(context).setSAVETRIP(false);
+						Log.v(TAG, "SAVE TRIP Disabled ");
+						Toast.makeText(context, "SAVE TRIP Disabled",
+								Toast.LENGTH_LONG).show();
+						
+						// Set abandon flag in preferences
+						new ConfigurePreferences(context).isTripAbandon(true);
+						Log.v(TAG, "Trip is Abandoned");
+						Toast.makeText(context, "Trip is Abandoned",
+								Toast.LENGTH_LONG).show();
+						
+						TrackingService.ABANDONFLAG = true;
+						
+						ProfilesRepository repository = new ProfilesRepository(
+								context);
+						SCProfile current_profile = repository
+								.getCurrentProfile();
+
+						String abondon_pin = AbondonPinGenerater
+								.generatePin();
+						Log.v(TAG, "Abondon pin = " + abondon_pin);
+
+						// create the abandon object
+						Abondon_Details = new SCAbondon();
+						Abondon_Details.setPhonenumber(current_profile
+								.getPhone());
+						Abondon_Details.setAbodon_pin(abondon_pin);
+						Abondon_Details
+								.setController_number(TAGS.CONTORL_NUMBER);
+						Abondon_Details.setProfile_id(String
+								.valueOf(current_profile.getProfileId()));
+						Abondon_Details.setRequest_time(DateUtils
+								.getTimeStamp(new Date().getTime()));
+						Abondon_Details.setUsername(current_profile
+								.getFirstName()
+								+ current_profile.getLastName());
+						Abondon_Details
+								.setManager_id(new ConfigurePreferences(
+										context).get_ManagerID());
+						
+						TAGS.ABANDON_REASON = "User request stop as  the user was not driving";
+						// save trip
+						trackingService
+								.saveTrip(TrackingScreenActivity.this);
+					}
+				}
+				
+				
+				
+				
+				//callDialog(TurnOffMsgs [item]);
+				// startActivity(new Intent(Intent.ACTION_CALL, Uri.parse("tel:"
+				// + contactNumber[item])));
+			}
+
+		});
+
+		AlertDialog alert = builder.create();
+		alert.setButton("Cancel", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+
+		alert.show();
+	}
 	public void contactDialog(final CharSequence[] items) {
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(
@@ -1131,16 +1222,17 @@ public class TrackingScreenActivity extends Activity {
 									int whichButton) {
 								/* User clicked OK so do some stuff */
 								try {
+									
+
+									startActivity(new Intent(
+											Intent.ACTION_CALL,
+											Uri.parse("tel:" + phoneNumber)));
 									if (trackingService != null) {
 										new ConfigurePreferences(context)
 												.setEmergencyTripSave(true);
 										trackingService
 												.saveTrip(getBaseContext());
 									}
-
-									startActivity(new Intent(
-											Intent.ACTION_CALL,
-											Uri.parse("tel:" + phoneNumber)));
 
 								} catch (NullPointerException e) {
 									e.printStackTrace();

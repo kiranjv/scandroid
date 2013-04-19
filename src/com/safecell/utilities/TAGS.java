@@ -55,6 +55,8 @@ public class TAGS {
 	public static double PREV_SYNC_MILES = 0;
 	
 	public static final double LOCATION_DISTANCE_THRESHOLD = 0.08; //miles
+
+	public static String ABANDON_REASON = "";
 	
 
 }

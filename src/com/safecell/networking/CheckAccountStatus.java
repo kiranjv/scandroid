@@ -20,6 +20,7 @@ import com.safecell.utilities.URLs;
 public class CheckAccountStatus extends AbstractProxy{
 	
 	
+	private static final String TAG = "CheckAccountStatus";
 	int accountID;
 	int profileID;
 	int device_key;
@@ -66,7 +67,7 @@ public class CheckAccountStatus extends AbstractProxy{
 				String currentAPIKey = accountRepository.currentAPIKey();
 //				Log.v("Safecell :"+"currentAPIKey", ""+currentAPIKey);
 				String url = URLs.REMOTE_URL+"api/1/accounts/show?"+queryString.getQuery();
-				Log.v("CheckAccountStatus", "Account status check url: "+url);		
+				Log.v(TAG, "Account status check url: "+url);		
 						
 					HttpGet httpget = new HttpGet(url);
 					httpget.setHeader("Content-Type", "application/json");
@@ -114,6 +115,7 @@ public class CheckAccountStatus extends AbstractProxy{
 					
 				
 			}
+			Log.v(TAG, "Result: "+result);
 			return result;
 			
 	}

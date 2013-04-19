@@ -721,7 +721,10 @@ public class TrackingService extends Service implements LocationListener,
 					TAGS.CURRENT_TRIPNAME, totalMiles, name);
 
 			long createJsonStart = System.currentTimeMillis();
+			// create trip logs json
 			submitNewTripJourney.createJson();
+			
+			
 			long createJsonEnd = System.currentTimeMillis();
 			long createJsonTime = (createJsonEnd - createJsonStart) / 1000;
 			Log.e(TAG, "Json create time: " + createJsonTime);
@@ -993,7 +996,7 @@ public class TrackingService extends Service implements LocationListener,
 				+ location.getLatitude());
 		logger.debug("-------------------------------------------");
 		logger.debug("Longitude  " + location.getLongitude() + " Latitude "
-				+ location.getLatitude());
+				+ location.getLatitude()+" Time: "+DateUtils.getTimeStamp(System.currentTimeMillis()));
 		// Ignore way point Emergency call in active and trip not started
 		if (new ConfigurePreferences(context).getEmergencyTRIPSAVE()
 				&& !new ConfigurePreferences(context).getTripStrated()) {
