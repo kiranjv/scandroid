@@ -484,8 +484,33 @@ public class TrackingService extends Service implements LocationListener,
 					// return;
 					// }
 				}
-				autoStartTrip();
-				Log.v(TAG, "Auto Trip Started");
+
+//				// put the time difference check.
+				TempTripJourneyWayPointsRepository waypointRepo = new TempTripJourneyWayPointsRepository(
+						context);
+				double firstWayPointTimeDiffernce = waypointRepo
+						.getFirstWayPointTimeDiffernce(System
+								.currentTimeMillis());
+
+				if (firstWayPointTimeDiffernce < TAGS.FALSE_TRIP_TIME_THRESHOLD) {
+					autoStartTrip();
+					Log.v(TAG, "Auto Trip Started. Time Difference: "
+							+ firstWayPointTimeDiffernce + " mins");
+					logger.info("Auto Trip Started. Time Difference: "
+							+ firstWayPointTimeDiffernce + " mins");
+				} else {
+					Log.v(TAG, "FALSE TRIP IDENTIFIED. Time Difference: "
+							+ firstWayPointTimeDiffernce + " mins");
+					logger.info("FALSE TRIP IDENTIFIED. Time Difference: "
+							+ firstWayPointTimeDiffernce + " mins");
+
+					// delete the waypoints
+					waypointRepo.deleteTripWaypoints();
+
+					// start the service again
+					startTrip();
+				}
+				
 				autoStartTripTimer = null;
 			}
 
@@ -692,7 +717,8 @@ public class TrackingService extends Service implements LocationListener,
 						.getInstance().getConfiguration().isLogWayPoints())) {
 
 			Log.v(TAG, "Trip distance is more than 1km");
-			logger.debug("Trip distance "+current_distance+" is more than 1km.");
+			logger.debug("Trip distance " + current_distance
+					+ " is more than 1km.");
 			TrackingScreenActivity.isTripSavingInProgress = true;
 
 			insertIntoSMS();
@@ -723,12 +749,11 @@ public class TrackingService extends Service implements LocationListener,
 			long createJsonStart = System.currentTimeMillis();
 			// create trip logs json
 			submitNewTripJourney.createJson();
-			
-			
+
 			long createJsonEnd = System.currentTimeMillis();
 			long createJsonTime = (createJsonEnd - createJsonStart) / 1000;
 			Log.e(TAG, "Json create time: " + createJsonTime);
-			logger.debug("Json creation time: "+createJsonTime);
+			logger.debug("Json creation time: " + createJsonTime);
 			if (NO_INTERNET_SAVE) {
 				Log.e(TAG, "NO_INTERNET_SAVE Json created: " + createJsonTime);
 				TripJsonRepository tripJsonRepository = new TripJsonRepository(
@@ -756,7 +781,7 @@ public class TrackingService extends Service implements LocationListener,
 			long serverTime = (sendHTTPEnd - sendHTTPStart) / 1000;
 			Log.e(TAG, "HTTP Process time: " + serverTime);
 			Log.v(TAG, "IhttpResponse: " + httpResponse);
-			logger.debug("Server process time: "+serverTime);
+			logger.debug("Server process time: " + serverTime);
 			if (httpResponse == null) {
 
 				Log.e(TAG,
@@ -772,7 +797,8 @@ public class TrackingService extends Service implements LocationListener,
 				Log.v(TAG, " Response code:"
 						+ httpResponse.getStatusLine().toString());
 
-				logger.debug("Server response code: "+ httpResponse.getStatusLine().toString());
+				logger.debug("Server response code: "
+						+ httpResponse.getStatusLine().toString());
 				SubmitNewTripJourneyResponceHandler submitNewTripJourneyResponceHandler = new SubmitNewTripJourneyResponceHandler(
 						TrackingService.this);
 				try {
@@ -787,7 +813,8 @@ public class TrackingService extends Service implements LocationListener,
 						long parseRespEnd = System.currentTimeMillis();
 						long parseRespTime = (parseRespEnd - parseRespStart) / 1000;
 						Log.e(TAG, "Parse response time: " + parseRespTime);
-						logger.debug("Parse server response time: "+parseRespTime);
+						logger.debug("Parse server response time: "
+								+ parseRespTime);
 					}
 
 					resultFlag = true;
@@ -996,7 +1023,8 @@ public class TrackingService extends Service implements LocationListener,
 				+ location.getLatitude());
 		logger.debug("-------------------------------------------");
 		logger.debug("Longitude  " + location.getLongitude() + " Latitude "
-				+ location.getLatitude()+" Time: "+DateUtils.getTimeStamp(System.currentTimeMillis()));
+				+ location.getLatitude() + " Time: "
+				+ DateUtils.getTimeStamp(System.currentTimeMillis()));
 		// Ignore way point Emergency call in active and trip not started
 		if (new ConfigurePreferences(context).getEmergencyTRIPSAVE()
 				&& !new ConfigurePreferences(context).getTripStrated()) {
@@ -1076,19 +1104,21 @@ public class TrackingService extends Service implements LocationListener,
 		}
 		if (currentLocation != null) {
 			// distance from current location and prev location
-			double curt_prev_distance = DistanceAndTimeUtils.distFrom(currentLocation.getLatitude(),
+			double curt_prev_distance = DistanceAndTimeUtils.distFrom(
+					currentLocation.getLatitude(),
 					currentLocation.getLongitude(), location.getLatitude(),
 					location.getLongitude());
-			
-			Log.d(TAG, "current and prev location distance: "+curt_prev_distance+ " miles");
-			logger.debug("current and prev location distance: "+curt_prev_distance+ " miles");
-			
-			if(curt_prev_distance >= TAGS.LOCATION_DISTANCE_THRESHOLD) {
+
+			Log.d(TAG, "current and prev location distance: "
+					+ curt_prev_distance + " miles");
+			logger.debug("current and prev location distance: "
+					+ curt_prev_distance + " miles");
+
+			if (curt_prev_distance >= TAGS.LOCATION_DISTANCE_THRESHOLD) {
 				Log.d(TAG, "Ignoring sudden location update. ");
 				logger.debug("Ignoring sudden location update. ");
 			}
-			
-			
+
 			lastDistanceInMiles += (location.distanceTo(currentLocation));
 		}
 
@@ -1157,7 +1187,7 @@ public class TrackingService extends Service implements LocationListener,
 	public void onProviderDisabled(String provider) {
 		Log.e(TAG, "onProviderDisabled: SELECTED_PROVIDER: "
 				+ SELECTED_PROVIDER + " provider " + provider);
-		logger.info(" provider " + provider +" disabled");
+		logger.info(" provider " + provider + " disabled");
 		selectBestLocationProvider();
 
 	}
@@ -1166,7 +1196,7 @@ public class TrackingService extends Service implements LocationListener,
 	public void onProviderEnabled(String provider) {
 		Log.e(TAG, "onProviderEnabled: SELECTED_PROVIDER: " + SELECTED_PROVIDER
 				+ " provider " + provider);
-		logger.info(" provider " + provider +" enabled");
+		logger.info(" provider " + provider + " enabled");
 		selectBestLocationProvider();
 	}
 
@@ -1177,16 +1207,16 @@ public class TrackingService extends Service implements LocationListener,
 		if (provider.equals(SELECTED_PROVIDER)) {
 			switch (status) {
 			case LocationProvider.OUT_OF_SERVICE:
-				Log.e(TAG, " provider " + provider +" out of service");
-				logger.info( " provider " + provider +" out of service");
+				Log.e(TAG, " provider " + provider + " out of service");
+				logger.info(" provider " + provider + " out of service");
 				break;
 			case LocationProvider.TEMPORARILY_UNAVAILABLE:
-				Log.e(TAG, " provider " + provider +" unavailable");
-				logger.info(" provider " + provider +" unavailable");
+				Log.e(TAG, " provider " + provider + " unavailable");
+				logger.info(" provider " + provider + " unavailable");
 				// showNotification("GPS updates are unavailable.");
 				break;
 			case LocationProvider.AVAILABLE:
-				logger.info(" provider " + provider +" available");
+				logger.info(" provider " + provider + " available");
 				if (!InformatonUtils.isServiceRunning(getApplicationContext())) {
 					Log.d(TAG, "Configuration");
 					configureLocationManager();
@@ -1321,15 +1351,15 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d(TAG, "Average Speed " + avarageSpeed);
 		Log.d(TAG, "Distance Travelled = " + total_distance);
 		Log.d(TAG, "Speed = " + speed);
-		logger.debug("Average Speed " + avarageSpeed+" Distance Travelled = " + total_distance+" Speed = " + speed);
-		
-		
+		logger.debug("Average Speed " + avarageSpeed + " Distance Travelled = "
+				+ total_distance + " Speed = " + speed);
+
 		if (!new ConfigurePreferences(context).isTripAbandon()) {
 			// Toast.makeText(context, "Avg speed: " +
 			// avarageSpeed+" speed:"+speed,
 			// 300).show();
 		}
-		
+
 		SharedPreferences sharedPreferences = getSharedPreferences("TRIP",
 				MODE_WORLD_READABLE);
 		isTripStarted = sharedPreferences.getBoolean("isTripStarted", false);
@@ -1859,7 +1889,7 @@ public class TrackingService extends Service implements LocationListener,
 	}
 
 	/**
-	 * Start the service again
+	 * Starts the service again
 	 * 
 	 */
 	private void startTrip() {

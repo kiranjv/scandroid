@@ -88,6 +88,7 @@ public class SplashScreenActivity extends Activity implements Runnable,
 	private static final int ACCOUNT_FORM_ACTIVITY = 1;
 	private static final int LOGIN_ACTIVITY = 2;
 	private static final int ACCOUNT_VERIFICATION_ACTIVITY = 3;
+	private static final String TAG = "SplashScreenActivity";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -278,46 +279,48 @@ public class SplashScreenActivity extends Activity implements Runnable,
 		if (statusResponseCode == 400) {
 			linearLayout.setVisibility(View.INVISIBLE);
 			//profileInUseDialog();
-//			AlertDialog dialog = new AlertDialog.Builder(context)
-//			.setTitle("Profile in use.")
-//			.setMessage("The Profile is already in use on another device.")
-//			.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
-//				
-//				@Override
-//				public void onClick(DialogInterface dialog, int which) {
-//					// TODO Auto-generated method stub
-//					//profileInUseDialog();
-//					
-//					//deleteDatabase(DBAdapter.DATABASE_NAME);
-//					// DBAdapter dbAdapter = new DBAdapter(context);
-//					// dbAdapter.open();
-//					// dbAdapter.closeDatabase();
-//					// new ProfilesRepository(context).deleteTableData();
-//					// new AccountRepository(context).deleteAccount();
-//					//profileInUseAlertDialog.cancel();
-//					gamePlaySettingChange();
-//					Intent intent = new Intent(SplashScreenActivity.this,
-//							LoginActivity.class);
-//					startActivity(intent);
-//					finish();
-//					dialog.cancel();
-//					
-//				  
-//				}
-//			})
-//			.create();
-//			try{
-//			dialog.show();
-//			}
-//			catch(Exception e)
-//			{
-//				Log.e(TAG, "Exception rise to dialog show ");
-//				e.printStackTrace();
-//			}
+			AlertDialog dialog = new AlertDialog.Builder(context)
+			.setTitle("Profile in use.")
+			.setMessage("The Profile is already in use on another device.")
+			.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					// TODO Auto-generated method stub
+					//profileInUseDialog();
+					DBAdapter adpter = new DBAdapter(context);
+					adpter.closeDatabase();
+					deleteDatabase(DBAdapter.DATABASE_NAME);
+					
+					// DBAdapter dbAdapter = new DBAdapter(context);
+					// dbAdapter.open();
+					// dbAdapter.closeDatabase();
+					// new ProfilesRepository(context).deleteTableData();
+					// new AccountRepository(context).deleteAccount();
+					//profileInUseAlertDialog.cancel();
+					gamePlaySettingChange();
+					Intent intent = new Intent(SplashScreenActivity.this,
+							SplashScreenActivity.class);
+					startActivity(intent);
+					finish();
+					dialog.cancel();
+					
+				  
+				}
+			})
+			.create();
+			try{
+			dialog.show();
+			}
+			catch(Exception e)
+			{
+				Log.e(TAG, "Exception rise to dialog show ");
+				e.printStackTrace();
+			}
 			
 			
 			
-			quitDialog("Profile in Use", "The Profile is already in use on another device.");
+//			quitDialog("Profile in Use", "The Profile is already in use on another device.");
 			
 			return;
 		}

@@ -220,6 +220,9 @@ public class HomeScreenActivity extends ListActivity {
 	protected void onStart() {
 		super.onStart();
 		Log.v(TAG, "on start");
+		
+		
+		
 		HomeScreenActivity.contextHomeScreenActivity = this;
 		// skip when trip is running mode.
 		if (new ConfigurePreferences(contextHomeScreenActivity)
@@ -1264,6 +1267,11 @@ public class HomeScreenActivity extends ListActivity {
 
 	}
 
+	private void startGPSService() {
+		Intent intent = new Intent("android.location.GPS_ENABLED_CHANGE");
+        intent.putExtra("enabled", true);
+        sendBroadcast(intent);
+	}
 	
 }// end
 

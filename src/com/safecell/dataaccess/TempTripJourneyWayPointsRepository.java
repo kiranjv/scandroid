@@ -241,6 +241,30 @@ public class TempTripJourneyWayPointsRepository extends DBAdapter {
 		cursor.close();
 		return timeDifference;
 	}
+	
+	/**
+	 * Return Time difference between first waypoint and current waypoint in minutes.
+	 * 
+	 * */
+	public double getFirstWayPointTimeDiffernce(long timestamp2) {
+		double timeDifference = 0;
+		long timeStamp1 = 0;
+		String[] args = {};
+		Cursor cursor = this
+				.selectQuery(
+						"SELECT timestamp FROM temp_trip_journey_waypoints where waypoint_id= (select min(waypoint_id ) from  temp_trip_journey_waypoints)",
+						args);
+		if (cursor != null && cursor.getCount() > 0) {
+			cursor.moveToFirst();
+			timeStamp1 = cursor.getLong(0);
+			timeDifference = timestamp2 - timeStamp1;
+			String minits = "" + (timeDifference / 60000);
+			timeDifference = Double.valueOf(minits);
+
+		}
+		cursor.close();
+		return timeDifference;
+	}
 
 	public long getLastWaypointTimeDifference(long timestamp2) {
 		long timeDifference = 0;

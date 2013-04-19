@@ -21,10 +21,10 @@ public class DBAdapter {
 		mDBHelper = new DBHelper(this.context);
 		if (db == null) {
 			try {
-				
+
 				// db = mDBHelper.getWritableDatabase();
-				
-				
+
+
 				db = mDBHelper.getReadableDatabase();
 
 			} catch (Exception e) {
@@ -68,14 +68,14 @@ public class DBAdapter {
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			Log.e("DBAdapter", "Dbadater onUpgrade");
 		}
-		
+
 		@Override
 		public void onOpen(SQLiteDatabase db) {
-			
+
 			super.onOpen(db);
 		}
-		
-		
+
+
 	}
 
 	public Cursor selectQuery(String sql, String[] args) {
