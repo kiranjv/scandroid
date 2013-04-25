@@ -2,6 +2,9 @@ package com.safecell.receiver;
 
 import java.util.StringTokenizer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningTaskInfo;
 import android.content.Context;
@@ -30,7 +33,8 @@ import com.safecell.utilities.Util;
  * 
  */
 public class LockKeyPadService {
-
+	static private final Logger logger = LoggerFactory
+			.getLogger(LockKeyPadService.class);
 	private final static String TAG = LockKeyPadService.class.getSimpleName();
 	private static boolean lock_status = false;
 	private static Context mContext;
@@ -64,7 +68,7 @@ public class LockKeyPadService {
 						String taskpackage = taskInfo.baseActivity
 								.getPackageName();
 						Log.d(TAG, "Task package = " + taskpackage);
-
+						logger.info("Task package = " + taskpackage);
 						if (taskpackage.equalsIgnoreCase(lasttask)) {
 							// Log.d(TAG, "This is previous package");
 						} else if (taskpackage.equalsIgnoreCase("com.safecell")) {
