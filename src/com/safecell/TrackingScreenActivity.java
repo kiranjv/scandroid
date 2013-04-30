@@ -12,8 +12,6 @@ import org.ispeech.error.InvalidApiKeyException;
 import org.ispeech.error.NoNetworkException;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -86,9 +84,6 @@ import com.safecell.utilities.Util;
 
 public class TrackingScreenActivity extends Activity {
 
-	static private final Logger logger = LoggerFactory
-			.getLogger(TrackingScreenActivity.class);
-	
 	private static boolean isTripPaused = false;
 	private static TextView tvLatitude;
 	private static TextView tvLongitude;
@@ -1118,7 +1113,6 @@ public class TrackingScreenActivity extends Activity {
 					Log.d(TAG, "Start abondon activity");
 					TAGS.ABANDON_REASON = "Request approval";
 					abondonTrip();
-					logger.info("Requesting manager for trip abandon..");
 				} else if(req_type.equalsIgnoreCase(TurnOffMsgs[1])) {
 					if (trackingService != null) {
 						
@@ -1164,10 +1158,9 @@ public class TrackingScreenActivity extends Activity {
 										context).get_ManagerID());
 						
 						TAGS.ABANDON_REASON = "User request stop as  the user was not driving";
-					logger.info("I am not driving abandon trip case started..");
 						// save trip
-//						trackingService
-//								.saveTrip(TrackingScreenActivity.this);
+						trackingService
+								.saveTrip(TrackingScreenActivity.this);
 					}
 				}
 				

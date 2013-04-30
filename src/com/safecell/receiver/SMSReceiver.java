@@ -7,8 +7,6 @@ import org.ispeech.SpeechSynthesisEvent;
 import org.ispeech.error.BusyException;
 import org.ispeech.error.InvalidApiKeyException;
 import org.ispeech.error.NoNetworkException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -34,9 +32,6 @@ import com.safecell.utilities.TAGS;
 
 public class SMSReceiver extends BroadcastReceiver {
 
-	static private final Logger logger = LoggerFactory
-			.getLogger(SMSReceiver.class);
-	
 	private String TAG = SMSReceiver.class.getSimpleName();
 
 	public static final Uri uriSms = Uri.parse("content://sms");
@@ -174,7 +169,6 @@ public class SMSReceiver extends BroadcastReceiver {
 									.getTime()));
 					
 					TrackingService.ABANDONFLAG = true;
-					logger.info("Abandon trip request aproval received...");
 				} else if (isSendSMS) {
 					Log.v(TAG, "Incoming number (" + address
 							+ ") is not a controller number");

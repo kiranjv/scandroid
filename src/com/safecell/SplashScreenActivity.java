@@ -102,7 +102,7 @@ public class SplashScreenActivity extends Activity implements Runnable,
 
 		DBAdapter dbAdapter = new DBAdapter(context);
 		try {
-			
+
 			dbAdapter.closeDatabase();
 			dbAdapter.open();
 		} catch (Exception e) {
@@ -154,16 +154,15 @@ public class SplashScreenActivity extends Activity implements Runnable,
 		 */
 
 		if (NetWork_Information.isNetworkAvailable(context) && exitProfile) {
-			
-			 downloadAccount account = new downloadAccount();
-			 account.execute();
-			
 
-			/*
-			 * Intent mIntent = new Intent(SplashScreenActivity.this,
-			 * HomeScreenActivity.class); startActivity(mIntent);
-			 * SplashScreenActivity.this.finish();
-			 */
+			/*downloadAccount account = new downloadAccount();
+			account.execute();*/
+
+			
+			 Intent mIntent = new Intent(SplashScreenActivity.this,
+			 HomeScreenActivity.class); startActivity(mIntent);
+			 SplashScreenActivity.this.finish();
+			 
 
 		} else if (NetWork_Information.isNetworkAvailable(context)
 				&& !exitProfile) {
@@ -172,8 +171,11 @@ public class SplashScreenActivity extends Activity implements Runnable,
 
 		} else {
 			linearLayout.setVisibility(View.INVISIBLE);
-			//NetWork_Information.noNetworkConnectiondialog(context);
-			Toast.makeText(context, "Network connection unavailable. Please check the connection.", Toast.LENGTH_LONG).show();
+			// NetWork_Information.noNetworkConnectiondialog(context);
+			Toast.makeText(
+					context,
+					"Network connection unavailable. Please check the connection.",
+					Toast.LENGTH_LONG).show();
 			this.finish();
 		}
 		// getAcccountInformation();
@@ -228,7 +230,7 @@ public class SplashScreenActivity extends Activity implements Runnable,
 	private synchronized String getAcccountInformation() {
 		accountStatus = new CheckAccountStatus(context);
 		String result = accountStatus.checkStatus();
-		
+
 		statusResponseCode = accountStatus.getStatusCode();
 
 		message = accountStatus.getFailureMessage();
@@ -267,61 +269,60 @@ public class SplashScreenActivity extends Activity implements Runnable,
 			SplashScreenActivity.this.finish();
 
 		}
-		
-		 else{ //checkStatusResponse(); 
-			 }
-		 }
-		 
 
-	
+		else { // checkStatusResponse();
+		}
+	}
 
 	private void checkStatusResponse() {
 		if (statusResponseCode == 400) {
 			linearLayout.setVisibility(View.INVISIBLE);
-			//profileInUseDialog();
+			// profileInUseDialog();
 			AlertDialog dialog = new AlertDialog.Builder(context)
-			.setTitle("Profile in use.")
-			.setMessage("The Profile is already in use on another device.")
-			.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
-				
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					// TODO Auto-generated method stub
-					//profileInUseDialog();
-					DBAdapter adpter = new DBAdapter(context);
-					adpter.closeDatabase();
-					deleteDatabase(DBAdapter.DATABASE_NAME);
-					
-					// DBAdapter dbAdapter = new DBAdapter(context);
-					// dbAdapter.open();
-					// dbAdapter.closeDatabase();
-					// new ProfilesRepository(context).deleteTableData();
-					// new AccountRepository(context).deleteAccount();
-					//profileInUseAlertDialog.cancel();
-					gamePlaySettingChange();
-					Intent intent = new Intent(SplashScreenActivity.this,
-							SplashScreenActivity.class);
-					startActivity(intent);
-					finish();
-					dialog.cancel();
-					
-				  
-				}
-			})
-			.create();
-			try{
-			dialog.show();
-			}
-			catch(Exception e)
-			{
+					.setTitle("Profile in use.")
+					.setMessage(
+							"The Profile is already in use on another device.")
+					.setNeutralButton("Ok",
+							new DialogInterface.OnClickListener() {
+
+								@Override
+								public void onClick(DialogInterface dialog,
+										int which) {
+									// TODO Auto-generated method stub
+									// profileInUseDialog();
+									DBAdapter adpter = new DBAdapter(context);
+									adpter.closeDatabase();
+									deleteDatabase(DBAdapter.DATABASE_NAME);
+
+									// DBAdapter dbAdapter = new
+									// DBAdapter(context);
+									// dbAdapter.open();
+									// dbAdapter.closeDatabase();
+									// new
+									// ProfilesRepository(context).deleteTableData();
+									// new
+									// AccountRepository(context).deleteAccount();
+									// profileInUseAlertDialog.cancel();
+									gamePlaySettingChange();
+									Intent intent = new Intent(
+											SplashScreenActivity.this,
+											SplashScreenActivity.class);
+									startActivity(intent);
+									finish();
+									dialog.cancel();
+
+								}
+							}).create();
+			try {
+				dialog.show();
+			} catch (Exception e) {
 				Log.e(TAG, "Exception rise to dialog show ");
 				e.printStackTrace();
 			}
-			
-			
-			
-//			quitDialog("Profile in Use", "The Profile is already in use on another device.");
-			
+
+			// quitDialog("Profile in Use",
+			// "The Profile is already in use on another device.");
+
 			return;
 		}
 		if (statusResponseCode == 404) {
@@ -967,8 +968,9 @@ public class SplashScreenActivity extends Activity implements Runnable,
 
 			}
 		});
-		wv.loadUrl(URLs.REMOTE_URL + "api/1/site_setting/terms_of_service.html");
-
+		// wv.loadUrl(URLs.REMOTE_URL +
+		// "api/1/site_setting/terms_of_service.html");
+		wv.loadUrl("file:///android_asset/terms_of_service.html");
 		builder = new AlertDialog.Builder(mContext);
 		builder.setView(layout);
 		builder.setTitle("Policy");
@@ -992,9 +994,8 @@ public class SplashScreenActivity extends Activity implements Runnable,
 			progressDialog.dismiss();
 		}
 		try {
-		alertDialogForTermsConditions.show();
-		}
-		catch (Exception e) {
+			alertDialogForTermsConditions.show();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

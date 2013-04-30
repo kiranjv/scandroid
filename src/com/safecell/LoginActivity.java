@@ -27,7 +27,6 @@ import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.safecell.dataaccess.AccountRepository;
 import com.safecell.dataaccess.ProfilesRepository;
@@ -280,30 +279,17 @@ public class LoginActivity extends Activity {
 						public void onClick(DialogInterface dialog, int item) {
 							if (NetWork_Information
 									.isNetworkAvailable(LoginActivity.this)) {
+								progressDialog
+										.setMessage("Loading Please Wait");
 
+								progressDialog.show();
+
+								progressDialog
+										.setCancelable(cancelSelectProfile);
 								try {
 									selectedProfile = profilesJA
 											.getJSONObject(item);
-									// check that profile already logged in
-									boolean is_app_installed = selectedProfile.getBoolean("is_app_installed");
-									Log.v(TAG, "is_app_installed: "+is_app_installed);
-									if(is_app_installed) {
-										Log.e(TAG, "Blocking login...");
-										Toast.makeText(context, "Profile already in use in another device.", Toast.LENGTH_LONG).show();
-										quitDialog(context, "Profile in use", "Profile already in use in another device.");
-										
-										
-									}
-									else {
-										Log.e(TAG, "Allowing login...");	
-									
-									progressDialog
-											.setMessage("Loading Please Wait");
 
-									progressDialog.show();
-
-									progressDialog
-											.setCancelable(cancelSelectProfile);
 									// setting selected index into preferences
 									new ConfigurePreferences(context)
 											.setProfileIndex(String
@@ -440,14 +426,12 @@ public class LoginActivity extends Activity {
 									} else {
 										mThread1.start();
 									}
-									}
 								} catch (Exception e) {
 									Log.d(TAG,
 											"Exception while checking license");
 									e.printStackTrace();
 								}
 
-							
 							} else {
 
 								Log.d(TAG, "No network information available");
