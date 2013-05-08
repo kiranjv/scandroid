@@ -58,12 +58,12 @@ public class SubmitNewTripJourneyResponceHandler {
 					String result = StreamToStringHelper.convertStreamToString(in);					
 					Log.d(TAG, "Got result from server " + result);
 					logger.debug("Server respopnse data:\n "+result);
-					/*
+					
 					FileOutputStream  fileOutputWrite = context.openFileOutput("Submit Trip Response",Context.MODE_APPEND);
 					OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputWrite);
 					outputStreamWriter.append(result);
 					outputStreamWriter.flush();
-					*/
+					
 
 					JSONObject JsonObject = new JSONObject(result);
 					//Log.v("Safecell :"+"Responce",JsonObject.toString(4));

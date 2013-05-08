@@ -450,4 +450,34 @@ public class ConfigurePreferences {
 		return sharedPreferences.getBoolean("ShutDown", false);
 	}
 	
+	public void setPrevSyncMiles(float distance) {
+		sharedPreferences = context.getSharedPreferences("TRIP",
+				context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = sharedPreferences.edit();
+		editor.putFloat("SYNC_DATA", distance);
+		editor.commit();
+		
+	}
+	
+	public float getPrevSyncMiles() {
+		sharedPreferences = context.getSharedPreferences("TRIP",
+				context.MODE_PRIVATE);
+		return sharedPreferences.getFloat("SYNC_DATA", 0);
+	}
+	
+	public void setOrgonizerToken(String tokan) {
+		sharedPreferences = context.getSharedPreferences("TRIP",
+				context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = sharedPreferences.edit();
+		editor.putString("ORGNIZERTOKEN", tokan);
+		editor.commit();
+		
+	}
+
+	public String getOrgonizerToken() {
+		sharedPreferences = context.getSharedPreferences("TRIP",
+				context.MODE_PRIVATE);
+		return sharedPreferences.getString("ORGNIZERTOKEN", "");
+	}
+	
 }

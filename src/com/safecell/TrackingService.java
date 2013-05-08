@@ -227,7 +227,14 @@ public class TrackingService extends Service implements LocationListener,
 		}
 		Log.v(TAG, "BootReceiver.SHUTDOWNSAVE = " + BootReceiver.SHUTDOWNSAVE);
 		if (BootReceiver.SHUTDOWNSAVE) {
-			Log.v(TAG, "SHUTDOWN save is active save previous trip data");
+			Log.v(TAG,
+					"SHUTDOWN save is active saving previous shutdown trip data");
+			logger.debug("SHUTDOWN save is active saving previous shutdown trip data");
+			TAGS.CURRENT_TRIPNAME = "Trip on " + getTodaysDate();
+			Log.v(TAG, "Shutdown trip name: " + TAGS.CURRENT_TRIPNAME);
+			Toast.makeText(context,
+					"Shutdown trip name: " + TAGS.CURRENT_TRIPNAME,
+					Toast.LENGTH_LONG).show();
 			try {
 				// DBAdapter dbAdapter = new DBAdapter(context);
 				// dbAdapter.closeDatabase();
@@ -386,11 +393,16 @@ public class TrackingService extends Service implements LocationListener,
 		// tempTripJourneyWayPointsRepository.deleteTrip();
 		// ir.deleteInteruptions();
 
+		String timestamp = String.valueOf(System.currentTimeMillis());
+		String key = SCProfile.newUniqueDeviceKey();
+
+		new ConfigurePreferences(context).setOrgonizerToken((timestamp + key));
+
 		/** change unique ID for trip saving **/
 		if (HomeScreenActivity.genereateTripUniqueID().equalsIgnoreCase("")) {
 
-			String timestamp = String.valueOf(System.currentTimeMillis());
-			String key = SCProfile.newUniqueDeviceKey();
+			//String timestamp = String.valueOf(System.currentTimeMillis());
+			//String key = SCProfile.newUniqueDeviceKey();
 			// String substr = uniqueTripId.substring(timestamp.length(),
 			// uniqueTripId.length());
 			// String unique_timeTripID = timestamp + substr;
@@ -485,7 +497,7 @@ public class TrackingService extends Service implements LocationListener,
 					// }
 				}
 
-//				// put the time difference check.
+				// // put the time difference check.
 				TempTripJourneyWayPointsRepository waypointRepo = new TempTripJourneyWayPointsRepository(
 						context);
 				double firstWayPointTimeDiffernce = waypointRepo
@@ -510,7 +522,7 @@ public class TrackingService extends Service implements LocationListener,
 					// start the service again
 					startTrip();
 				}
-				
+
 				autoStartTripTimer = null;
 			}
 
@@ -710,13 +722,15 @@ public class TrackingService extends Service implements LocationListener,
 
 		Log.v(TAG, "Trip Total distance traveled: " + TotalDistatnce);
 
-		double current_distance = TotalDistatnce + TAGS.PREV_SYNC_MILES;
+		double current_distance = TotalDistatnce
+				+ new ConfigurePreferences(context).getPrevSyncMiles(); // TAGS.PREV_SYNC_MILES;
 
 		if (BootReceiver.SHUTDOWNSAVE
 				|| (!(current_distance < 1) && ConfigurationHandler
 						.getInstance().getConfiguration().isLogWayPoints())) {
 
 			Log.v(TAG, "Trip distance is more than 1km");
+
 			logger.debug("Trip distance " + current_distance
 					+ " is more than 1km.");
 			TrackingScreenActivity.isTripSavingInProgress = true;
@@ -804,9 +818,10 @@ public class TrackingService extends Service implements LocationListener,
 				try {
 					if (new ConfigurePreferences(context).isTripAbandon()) {
 						Log.v(TAG, "Ignoring abandon trip save response");
+						logger.debug("Ignoring abandon trip save response");
 					} else {
 						Log.d(TAG, "Parsing trip save response");
-
+						logger.debug("Parsing trip save response");
 						long parseRespStart = System.currentTimeMillis();
 						submitNewTripJourneyResponceHandler
 								.readResponce(httpResponse);
@@ -831,7 +846,7 @@ public class TrackingService extends Service implements LocationListener,
 		{
 			resultFlag = false;
 			Log.d(TAG, "Trip too small to save");
-
+			logger.debug("Trip too small to save");
 			// // showNotification("Auto Save: Trip is small to save");
 			SharedPreferences.Editor editor1 = sharedPreferences.edit();
 			editor1.putBoolean("isTripPaused", false);
@@ -1327,10 +1342,42 @@ public class TrackingService extends Service implements LocationListener,
 	}
 
 	private void insertWaypoint(Location location) {
-		// InteruptionRepository
-		Log.v(TAG, "Inserting way point");
+
+		/* Check previous trip json's exist in database = */
+		if (NetWork_Information.isNetworkAvailable(context)
+				&& !ExistingTripJsonHandler.isInProgress) {
+			TripJsonRepository json_repo = new TripJsonRepository(context);
+			int num_trips = json_repo.getNumberOfTripJsons();
+			if (num_trips > 0) {
+				Log.d(TAG, "Previous trips exist's. Saving the trip.");
+				logger.debug("Previous trips exist's. Saving the trip.");
+				new ExistingTripJsonHandler(context).postAllTripJsons();
+			}
+		}
+
+		SharedPreferences sharedPreferences = getSharedPreferences("TRIP",
+				MODE_WORLD_READABLE);
+		isTripStarted = sharedPreferences.getBoolean("isTripStarted", false);
+		Log.d(TAG, "is Trip Started " + isTripStarted);
+
 		TempTripJourneyWayPointsRepository tempTripJourneyWayPointsRepository = new TempTripJourneyWayPointsRepository(
 				this);
+		int current_locations = tempTripJourneyWayPointsRepository
+				.getTotalWaypoints();
+		Log.v(TAG, "Current locations: " + current_locations);
+		logger.debug("Current local locations: " + current_locations);
+		if (!isTripStarted && current_locations <= 15) {
+			Toast.makeText(context, "Locations in DB: " + current_locations,
+					Toast.LENGTH_SHORT).show();
+			SCWayPoint wayPoint = new SCWayPoint(0, 0,
+					DateUtils.getTimeStamp(System.currentTimeMillis()),
+					location.getLatitude(), location.getLongitude(), speed,
+					false);
+			Log.d(TAG, "Inserting way points");
+			tempTripJourneyWayPointsRepository.intsertWaypoint(wayPoint);
+			return;
+		}
+
 		double distanceInMiles = tempTripJourneyWayPointsRepository
 				.getDistanceDifference(location);
 		long currentTime = new Date().getTime();
@@ -1339,8 +1386,17 @@ public class TrackingService extends Service implements LocationListener,
 				.getTimeDiffernce(currentTime);
 
 		Log.v(TAG, "Time difference " + timeDifference);
-		double avarageSpeed = tempTripJourneyWayPointsRepository
-				.getAvarageEstimatedSpeedForAutoTripStart();
+
+		double avarageSpeed = 0;
+		if (!isTripStarted) {
+			avarageSpeed = tempTripJourneyWayPointsRepository
+					.getMyAvarageEstimatedSpeedForAutoTripStart();
+
+		} else {
+			avarageSpeed = tempTripJourneyWayPointsRepository
+					.getAvarageEstimatedSpeedForAutoTripStart();
+
+		}
 
 		double total_distance = tempTripJourneyWayPointsRepository
 				.getTotalDistance();
@@ -1360,23 +1416,7 @@ public class TrackingService extends Service implements LocationListener,
 			// 300).show();
 		}
 
-		SharedPreferences sharedPreferences = getSharedPreferences("TRIP",
-				MODE_WORLD_READABLE);
-		isTripStarted = sharedPreferences.getBoolean("isTripStarted", false);
-
 		int dist = (int) total_distance;
-
-		/* Check previous trip json's exist in database = */
-		if (NetWork_Information.isNetworkAvailable(context)
-				&& !ExistingTripJsonHandler.isInProgress) {
-			TripJsonRepository json_repo = new TripJsonRepository(context);
-			int num_trips = json_repo.getNumberOfTripJsons();
-			if (num_trips > 0) {
-				Log.d(TAG, "Previous trips exist's. Saving the trip.");
-				logger.debug("Previous trips exist's. Saving the trip.");
-				new ExistingTripJsonHandler(context).postAllTripJsons();
-			}
-		}
 
 		// if (total_distance >= 0.2 && isTripStarted) {
 		// Log.v(TAG, "Mannual save call");
@@ -1384,31 +1424,32 @@ public class TrackingService extends Service implements LocationListener,
 		// saveTrip(context);
 		// }
 
-		Log.d(TAG, "is Trip Started " + isTripStarted);
-		if (avarageSpeed >= TRIP_CUT_OFF && isTripStarted == false
-				&& autoStartTripTimer == null && total_distance > 0.3) {
-			SharedPreferences tripAutoStartSharedPref = getSharedPreferences(
-					"TripCheckBox", MODE_WORLD_READABLE);
-			boolean startAutoTrips = tripAutoStartSharedPref.getBoolean(
-					"isbackgroundtrip", true);
-			Log.d(TAG, "Start Auto Trips = " + startAutoTrips);
-
-			if (startAutoTrips
-					&& (SELECTED_PROVIDER == LocationManager.GPS_PROVIDER)) {
-				Log.d(TAG, "Starting Trip Timer.");
-				setAutoStartTripTimer();
-			} else {
-				Log.e(TAG, "AutoTrip start Timer not started "
-						+ SELECTED_PROVIDER + " GPS Provider = "
-						+ LocationManager.GPS_PROVIDER);
-			}
-
-		} else if (avarageSpeed < TRIP_CUT_OFF && isTripStarted == false
-				&& autoStartTripTimer != null) {
-			Log.i(TAG, "Canceling the start timer for average speed ="
-					+ avarageSpeed);
-			cancelAutoTripStartTimer();
+		if (avarageSpeed >= TRIP_CUT_OFF && isTripStarted == false) {
+			// start the service again
+			Toast.makeText(context, " Starting trip. " + current_locations,
+					Toast.LENGTH_SHORT).show();
+			autoStartTrip();
 		}
+
+		/*
+		 * if (avarageSpeed >= TRIP_CUT_OFF && isTripStarted == false &&
+		 * autoStartTripTimer == null && total_distance > 0.3) {
+		 * SharedPreferences tripAutoStartSharedPref = getSharedPreferences(
+		 * "TripCheckBox", MODE_WORLD_READABLE); boolean startAutoTrips =
+		 * tripAutoStartSharedPref.getBoolean( "isbackgroundtrip", true);
+		 * Log.d(TAG, "Start Auto Trips = " + startAutoTrips);
+		 * 
+		 * if (startAutoTrips && (SELECTED_PROVIDER ==
+		 * LocationManager.GPS_PROVIDER)) { Log.d(TAG, "Starting Trip Timer.");
+		 * setAutoStartTripTimer(); } else { Log.e(TAG,
+		 * "AutoTrip start Timer not started " + SELECTED_PROVIDER +
+		 * " GPS Provider = " + LocationManager.GPS_PROVIDER); }
+		 * 
+		 * } else if (avarageSpeed < TRIP_CUT_OFF && isTripStarted == false &&
+		 * autoStartTripTimer != null) { Log.i(TAG,
+		 * "Canceling the start timer for average speed =" + avarageSpeed);
+		 * cancelAutoTripStartTimer(); }
+		 */
 
 		if (speed > IGNORE_WAYPOINT_SPEED_LIMIT && timeDifference != 0) {
 			Log.i(TAG, "Speed is too belond waypoint speed =" + speed);
@@ -1765,11 +1806,14 @@ public class TrackingService extends Service implements LocationListener,
 				ir.deleteInteruptions();
 
 				// clear prev trip sync distance
-				TAGS.PREV_SYNC_MILES = 0;
+				// TAGS.PREV_SYNC_MILES = 0;
+				new ConfigurePreferences(context).setPrevSyncMiles(0);
 			} else {
 
 				if (!result) {
 					Log.d(TAG, "Save failled save result status: " + result);
+					tempTripJourneyWayPointsRepository.deleteTripWaypoints();
+					ir.deleteInteruptions();
 					// try {
 					//
 					// if (trackingScreenActivity != null) {
@@ -1822,7 +1866,8 @@ public class TrackingService extends Service implements LocationListener,
 					tempTripJourneyWayPointsRepository.deleteTripWaypoints();
 					ir.deleteInteruptions();
 					// clear prev trip sync distance
-					TAGS.PREV_SYNC_MILES = 0;
+					// TAGS.PREV_SYNC_MILES = 0;
+					new ConfigurePreferences(context).setPrevSyncMiles(0);
 				}
 
 			}

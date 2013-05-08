@@ -56,7 +56,7 @@ public class TAGS {
 	
 	public static final double LOCATION_DISTANCE_THRESHOLD = 0.08; //miles
 
-	public static final double FALSE_TRIP_TIME_THRESHOLD = 5;    // minits
+	public static final double FALSE_TRIP_TIME_THRESHOLD = 15;    // minits
 
 	public static String ABANDON_REASON = "";
 	

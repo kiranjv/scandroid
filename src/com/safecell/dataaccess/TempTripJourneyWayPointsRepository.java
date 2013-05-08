@@ -346,6 +346,71 @@ public class TempTripJourneyWayPointsRepository extends DBAdapter {
 	// return avarageEstimatedSpeed;
 	// }
 
+	
+
+	public double getMyAvarageEstimatedSpeedForAutoTripStart() {
+
+		double totalDistance = 0;
+		double averageSpeed = 0;
+		
+		String query  = "SELECT distance, timestamp, waypoint_id FROM temp_trip_journey_waypoints order by waypoint_id desc limit(20)";
+//		boolean isTripStrated = new ConfigurePreferences(context)
+//		.getTripStrated();
+//		if (isTripStrated) {
+//			query = "SELECT distance, timestamp, waypoint_id FROM temp_trip_journey_waypoints order by waypoint_id desc limit(12)";
+//		} else {
+//			query = "SELECT distance, timestamp, waypoint_id FROM temp_trip_journey_waypoints order by waypoint_id desc limit(5)";
+//		}
+
+		String args[] = {};
+		Cursor cursor = this.selectQuery(query, args);
+
+		boolean firstIteration = true;
+
+		long endTimeStamp = 0;
+		long startTimeStamp = 0;
+
+		if (cursor != null && cursor.getCount() > 0) {
+			cursor.moveToFirst();
+
+			for (int i = 0; i < cursor.getCount(); i++) {
+				double currentDistance = cursor.getDouble(0);
+				// Log.v("Safecell", cursor.getInt(2) + ". currentDistance: " +
+				// currentDistance);
+
+				totalDistance += currentDistance;
+				if (firstIteration) {
+					endTimeStamp = cursor.getLong(1);
+					firstIteration = false;
+				} else {
+					startTimeStamp = cursor.getLong(1);
+				}
+
+				cursor.moveToNext();
+			}
+		}
+
+		cursor.close();
+
+		if (endTimeStamp == 0 || startTimeStamp == 0) {
+			return 0;
+		}
+
+		long timeDifference = endTimeStamp - startTimeStamp;
+
+		if (timeDifference == 0) {
+			return 0;
+		}
+
+		double timeDifferenceInHours = timeDifference / 3600000.0;
+
+		averageSpeed = totalDistance / timeDifferenceInHours;
+		// Log.v("Safecell", totalDistance + " / " + timeDifferenceInHours +
+		// " = " + averageSpeed);
+		return averageSpeed;
+	} 
+		
+	
 	public double getAvarageEstimatedSpeedForAutoTripStart() {
 
 		double totalDistance = 0;
