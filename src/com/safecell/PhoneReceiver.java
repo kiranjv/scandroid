@@ -16,16 +16,25 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.AudioManager;
+import android.os.Environment;
 import android.os.RemoteException;
 import android.telephony.PhoneStateListener;
 import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.lang.reflect.Method;
+
+import org.apache.http.util.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PhoneReceiver extends BroadcastReceiver {
 
+	static private final Logger logger = LoggerFactory
+			.getLogger(PhoneReceiver.class);
 	public static boolean EMERGENCYCALL_ACTIVE = false;
 
 	TelephonyManager telephonyManager;
@@ -51,6 +60,9 @@ public class PhoneReceiver extends BroadcastReceiver {
 		SharedPreferences preferences = context.getSharedPreferences("TRIP", 1);
 
 		this.mContext = context;
+		
+		try {
+		
 		Log.d(TAG, "Intent Action:" + intent.getAction());
 		if (intent.getAction().equals("android.intent.action.PHONE_STATE")) {
 			// check already in call
@@ -89,6 +101,8 @@ public class PhoneReceiver extends BroadcastReceiver {
 			return;
 		}
 
+		
+		
 		if (state.equals(TelephonyManager.EXTRA_STATE_RINGING) && b) {
 			// Allow emergency numbers incoming
 			String phonenumber = intent
@@ -107,6 +121,43 @@ public class PhoneReceiver extends BroadcastReceiver {
 			// telephonyService.endCall();
 			//TrackingScreenActivity.incomingCallCounter++;
 
+		}
+		}
+		catch (Exception e) {
+			String message = e.getMessage();
+			logger.debug("Exception message: "+message);
+			
+			Throwable fillInStackTrace = e.fillInStackTrace();
+			
+			String root = Environment.getExternalStorageDirectory().toString();
+			String filename = root+"/phonereciver.txt";
+			PrintWriter writer;
+			try {
+				writer = new PrintWriter(filename);
+				e.printStackTrace(writer);
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			logger.debug("fillInStackTrace message: "+fillInStackTrace.toString());
+			logger.debug("Cause message: "+e.getCause());
+			logger.debug("message: "+e.getMessage());
+			logger.debug("localised message: "+e.getLocalizedMessage());
+			StackTraceElement[] stackTrace = e.getStackTrace();
+			String stackTraceElementsData = "";
+			for (int i = 0; i < stackTrace.length; i++) {
+				StackTraceElement stackTraceElement = stackTrace[i];
+				stackTraceElementsData += stackTraceElement.toString();
+			}
+			logger.debug("Stack trace elements appends: "+stackTraceElementsData);
+			logger.debug("e.toString: "+e.toString());
+			
+			
+			
+			
+			
+			
 		}
 	}
 

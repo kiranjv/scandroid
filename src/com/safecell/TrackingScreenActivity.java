@@ -4,6 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.ispeech.SpeechSynthesis;
 import org.ispeech.SpeechSynthesisEvent;
@@ -1231,14 +1233,34 @@ public class TrackingScreenActivity extends Activity {
 								try {
 									
 
+									// make call
 									startActivity(new Intent(
 											Intent.ACTION_CALL,
 											Uri.parse("tel:" + phoneNumber)));
+									
+									// save trip
 									if (trackingService != null) {
+										Log.v(TAG, "Emergency call trip saving");
+										Util.saveInterruption(context,
+												"EMERGENCY-"+phoneNumber);
 										new ConfigurePreferences(context)
 												.setEmergencyTripSave(true);
 										trackingService
 												.saveTrip(getBaseContext());
+										
+										// enable emergency halt falg
+										TAGS.IS_EMERGENCY_HALT_ACTIVATED = true;
+										
+										// start timer 
+										Timer timer = new Timer();
+										timer.schedule(new TimerTask() {
+											
+											@Override
+											public void run() {
+												TAGS.IS_EMERGENCY_HALT_ACTIVATED = false;
+												
+											}
+										}, Util.minitToMilliSeconds(TAGS.EMERGENCY_TRIP_HALT_TIME));
 									}
 
 								} catch (NullPointerException e) {

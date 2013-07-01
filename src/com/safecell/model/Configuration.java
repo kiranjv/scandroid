@@ -22,6 +22,8 @@
 
 package com.safecell.model;
 
+import java.util.Calendar;
+
 /**
  * @author uttama
  */
@@ -29,25 +31,79 @@ public class Configuration {
 
 	private int tripStartSpeed = 5;
 
-	private int tripStopTime = 5;
+	private int tripStopTime = 2;
 
 	private boolean disableEmail = true;
 
-	private boolean disableCall = false;
+	private boolean disableCall = true;
 
-	private boolean disableTexting = false;
+	private boolean disableTexting = true;
 
 	private boolean disableWeb = true;
 
 	private boolean logWayPoints = true;
 
-	private String controller_number = "";
+	private String controller_number = "+918971855771";
 
-	private boolean splashShow = false;
+	private boolean splashShow = true;
 
-	private boolean keypadlock = false;
+	private boolean keypadlock = true;
+
+	/* temporary configuration.. */
+
+	/* Represent re-check time interval for trip start time config. */
+	private int recheckInterval = 2;
+
+	private String dayOfWeek = "Sunday";
+
+	private boolean isActive = true;
+
+	private String startTime = "16:40";
+
+	private String endTime = "17:00";
+
+	public int getRecheckInterval() {
+		return recheckInterval;
+	}
+
+	public void setRecheckInterval(int recheckInterval) {
+		this.recheckInterval = recheckInterval;
+	}
+
+	public String getDayOfWeek() {
+		return dayOfWeek;
+	}
+
+	public void setDayOfWeek(String dayOfWeek) {
+		this.dayOfWeek = dayOfWeek;
+	}
+
+	public boolean isActive() {
+		return isActive;
+	}
+
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+
+	public String getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(String startTime) {
+		this.startTime = startTime;
+	}
+
+	public String getEndTime() {
+		return endTime;
+	}
+
+	public void setEndTime(String endTime) {
+		this.endTime = endTime;
+	}
 
 	public boolean getKeypadlock() {
+
 		return keypadlock;
 	}
 

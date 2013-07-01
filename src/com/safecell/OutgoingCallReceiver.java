@@ -75,11 +75,13 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
 		SharedPreferences preferences = context.getSharedPreferences("TRIP", 1);
 
 		boolean isTripStarted = preferences.getBoolean("isTripStarted", false);
-		if(isTripStarted && new ConfigurePreferences(mContext).isTripAbandon()) {
-			Log.v(TAG, "Outgoing call received when trip abandon");
-			return;
-		}
-		if (isTripStarted && !TrackingService.ignoreLocationUpdates) {
+//		if(isTripStarted && new ConfigurePreferences(mContext).isTripAbandon()) {
+//			Log.v(TAG, "Outgoing call received when trip abandon");
+//			return;
+//		}
+		
+		
+		if (isTripStarted && !TrackingService.ignoreLocationUpdates ) {
 
 			if (TAGS.disableCall) {
 				telephonyManager = (TelephonyManager) context
@@ -90,9 +92,11 @@ public class OutgoingCallReceiver extends BroadcastReceiver {
 					if (!isEmergencyNumber(phonenumber)) {
 
 						try {
+							if(!new ConfigurePreferences(mContext).isTripAbandon()) {
 							Log.d(TAG, "Ending Outgoing Call");
 							setResultData(null);
 							telephonyService.endCall();
+							}
 						} catch (RemoteException e) {
 							e.printStackTrace();
 						}

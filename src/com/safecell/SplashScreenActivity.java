@@ -1,3 +1,4 @@
+
 package com.safecell;
 
 import com.safecell.dataaccess.AccountRepository;
@@ -152,8 +153,8 @@ public class SplashScreenActivity extends Activity implements Runnable,
 		 * mIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		 * startActivity(mIntent); finish(); }
 		 */
-
-		if (NetWork_Information.isNetworkAvailable(context) && exitProfile) {
+	   boolean isNetworkAvailable = NetWork_Information.isNetworkAvailable(context);
+		if ( isNetworkAvailable && exitProfile) {
 
 			/*downloadAccount account = new downloadAccount();
 			account.execute();*/
@@ -164,10 +165,16 @@ public class SplashScreenActivity extends Activity implements Runnable,
 			 SplashScreenActivity.this.finish();
 			 
 
-		} else if (NetWork_Information.isNetworkAvailable(context)
+		} else if (isNetworkAvailable
 				&& !exitProfile) {
 			// Show policy terms & conditions
-			dialogforWebview(LOGIN_ACTIVITY);
+			
+			
+			Intent mIntent1 = new Intent(SplashScreenActivity.this,
+					LoginActivity.class);
+			startActivity(mIntent1);
+			//dialogforWebview(LOGIN_ACTIVITY);
+			SplashScreenActivity.this.finish();
 
 		} else {
 			linearLayout.setVisibility(View.INVISIBLE);
@@ -1012,10 +1019,10 @@ public class SplashScreenActivity extends Activity implements Runnable,
 			break;
 		case LOGIN_ACTIVITY:
 
-			Intent mIntent1 = new Intent(SplashScreenActivity.this,
-					LoginActivity.class);
-			startActivity(mIntent1);
-			SplashScreenActivity.this.finish();
+			// Intent mIntent1 = new Intent(SplashScreenActivity.this,
+			// LoginActivity.class);
+			// startActivity(mIntent1);
+			 SplashScreenActivity.this.finish();
 			break;
 		case ACCOUNT_VERIFICATION_ACTIVITY:
 

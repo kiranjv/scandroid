@@ -126,9 +126,14 @@ public class InteruptionRepository extends DBAdapter {
 					interuptionJSONObject = new JSONObject();
 					interuptionJSONObject.put("terminated_app", isTerminated);
 					interuptionJSONObject.put("started_at", startedAt);
+					interuptionJSONObject.put("started_atutc", startedAt);
+					
 					interuptionJSONObject.put("longitude", longitude);
 					interuptionJSONObject.put("latitude", latitude);
+					
 					interuptionJSONObject.put("ended_at", endedAt);
+					interuptionJSONObject.put("ended_atutc", endedAt);
+					
 					interuptionJSONObject.put("paused", isPaused);
 					interuptionJSONObject.put("estimated_speed", estimated_speed);
 					interuptionJSONObject.put("school_zone_flag",category );

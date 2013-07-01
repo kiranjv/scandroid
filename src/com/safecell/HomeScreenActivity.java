@@ -3,6 +3,7 @@ package com.safecell;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.OutputStreamWriter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -81,10 +82,10 @@ import com.safecell.utilities.URLs;
 import com.safecell.utilities.Util;
 
 public class HomeScreenActivity extends ListActivity {
-	
-	static private final Logger LOG =
-            LoggerFactory.getLogger(HomeScreenActivity.class);
-	
+
+	static private final Logger LOG = LoggerFactory
+			.getLogger(HomeScreenActivity.class);
+
 	/** Called when the activity is first created. **/
 	Button startNewTripButton, homeButton, btnMyTrips, rulesButton, faxButton;
 	TextView tvTotalTrips, tvGrade, tvTotalMiles;
@@ -131,13 +132,11 @@ public class HomeScreenActivity extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 
-		
-		
 		// android:background="@drawable/stop_button"
 
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
-		
+
 		Log.v(TAG, "on create");
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setWindowAnimations(R.anim.null_animation);
@@ -220,9 +219,7 @@ public class HomeScreenActivity extends ListActivity {
 	protected void onStart() {
 		super.onStart();
 		Log.v(TAG, "on start");
-		
-		
-		
+
 		HomeScreenActivity.contextHomeScreenActivity = this;
 		// skip when trip is running mode.
 		if (new ConfigurePreferences(contextHomeScreenActivity)
@@ -462,11 +459,9 @@ public class HomeScreenActivity extends ListActivity {
 				int points = cursorTripJounery.getInt(pointsIndex);
 				long tripDate = cursorTripJounery.getLong(trip_dateIndex);
 
-				
-				
-				
 				String formatTripDate = DateUtils.dateInString(tripDate);
-				Log.e(TAG, "(Milli)tripDate: "+tripDate+" formatedTripDate: "+formatTripDate);
+				Log.e(TAG, "(Milli)tripDate: " + tripDate
+						+ " formatedTripDate: " + formatTripDate);
 				pointsArray[arrayIndex] = points;
 				milesArray[arrayIndex] = miles + " Total Miles";
 				tripRecordedDateArray[arrayIndex] = formatTripDate;
@@ -600,7 +595,8 @@ public class HomeScreenActivity extends ListActivity {
 			public void onClick(View v) {
 				faxButton.setBackgroundResource(R.drawable.fax_click);
 				Activity activity = HomeScreenActivity.this;
-				tabControler.dialogforWebviewFax(URLs.FAX_URL, activity, HomeScreenActivity.this);
+				tabControler.dialogforWebviewFax(URLs.FAX_URL, activity,
+						HomeScreenActivity.this);
 
 			}
 		});
@@ -685,6 +681,10 @@ public class HomeScreenActivity extends ListActivity {
 	};// Library
 	private WebView wv;
 
+	protected String captureimage_filename;
+
+	protected String captureimage_filename_absolutepath;
+
 	private void dialogMessage() {
 		Dialog dialog = new AlertDialog.Builder(HomeScreenActivity.this)
 				.setMessage("Select Profile Picture")
@@ -704,17 +704,27 @@ public class HomeScreenActivity extends ListActivity {
 							public void onClick(DialogInterface dialog,
 									int whichButton) {
 
-								Intent nintent = new Intent(
-										MediaStore.ACTION_IMAGE_CAPTURE);
-								File file = new File(Environment
-										.getExternalStorageDirectory(), String
-										.valueOf(System.currentTimeMillis())
-										+ ".jpg");
+								Intent cameraIntent = new Intent(
+										android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+								startActivityForResult(cameraIntent, 2);
 
-								outputFileUri = Uri.fromFile(file);
-								nintent.putExtra(MediaStore.EXTRA_OUTPUT,
-										outputFileUri);
-								startActivityForResult(nintent, 2);
+								/*
+								 * Intent nintent = new Intent(
+								 * MediaStore.ACTION_IMAGE_CAPTURE);
+								 * captureimage_filename = String
+								 * .valueOf(System.currentTimeMillis()) +
+								 * ".jpg";
+								 * 
+								 * File file = new File(Environment
+								 * .getExternalStorageDirectory(),
+								 * captureimage_filename );
+								 * captureimage_filename_absolutepath =
+								 * file.getAbsolutePath(); outputFileUri =
+								 * Uri.fromFile(file);
+								 * nintent.putExtra(MediaStore.EXTRA_OUTPUT,
+								 * outputFileUri);
+								 * startActivityForResult(nintent, 2);
+								 */
 							}
 						}).create();
 		dialog.show();
@@ -737,16 +747,31 @@ public class HomeScreenActivity extends ListActivity {
 			}
 		}// //End Request code = 1
 
-		if (requestCode == 2) {
-			if (resultCode == -1) {
-
-				Uri selectedImage = Uri.parse(outputFileUri.getPath());
-				// Log.v("Safecell :" + "selectedImage", "imagePath = "
-				// + selectedImage);
-				profileImageView.setImageBitmap(getImageFromURI(selectedImage));
-
-			}
-		}
+		if (requestCode == 2 && resultCode == RESULT_OK) {  
+            Bitmap photo = (Bitmap) data.getExtras().get("data"); 
+            profileImageView.setImageBitmap(photo);
+        }
+		
+		/*
+		 * if (requestCode == 2) { if (resultCode == -1) {
+		 * 
+		 * if (outputFileUri == null) { //outputFileUri = (Uri)
+		 * data.getExtras().get(MediaStore.EXTRA_OUTPUT);
+		 * 
+		 * Uri selectedImage = data.getData(); // Log.v("Safecell :" +
+		 * "selectedImage", "imagePath = " // + selectedImage); profileImageView
+		 * .setImageBitmap(getImageFromURI(selectedImage));
+		 * 
+		 * UIUtils.OkDialog(HomeScreenActivity.this,
+		 * "Capture image not available. outputuri: "+outputFileUri);
+		 * 
+		 * } else { Uri selectedImage = Uri.parse(outputFileUri.getPath()); //
+		 * Log.v("Safecell :" + "selectedImage", "imagePath = " // +
+		 * selectedImage); profileImageView
+		 * .setImageBitmap(getImageFromURI(selectedImage)); }
+		 * 
+		 * } }
+		 */
 
 	}// end on result
 
@@ -1269,9 +1294,9 @@ public class HomeScreenActivity extends ListActivity {
 
 	private void startGPSService() {
 		Intent intent = new Intent("android.location.GPS_ENABLED_CHANGE");
-        intent.putExtra("enabled", true);
-        sendBroadcast(intent);
+		intent.putExtra("enabled", true);
+		sendBroadcast(intent);
 	}
-	
+
 }// end
 

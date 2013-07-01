@@ -58,7 +58,24 @@ public class TAGS {
 
 	public static final double FALSE_TRIP_TIME_THRESHOLD = 15;    // minits
 
+	public static final long EMERGENCY_TRIP_HALT_TIME = 30;    // minits
+	
+	public static boolean IS_EMERGENCY_HALT_ACTIVATED = false; 
+	
+
 	public static String ABANDON_REASON = "";
+	
+	
+	/* Represent re-check time interval for trip start time config. */
+	public static int recheckInterval = 2;
+
+	public static String dayOfWeek = "Sunday";
+
+	public static boolean isActive = true;
+
+	public static String startTime = "16:40";
+
+	public static String endTime = "17:00";
 	
 
 }

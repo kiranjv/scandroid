@@ -38,8 +38,10 @@ import android.widget.Toast;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 /**
  * @author uttama
@@ -132,8 +134,21 @@ public class Util {
 			if (cursor != null && cursor.getCount() > 0) {
 				cursor.moveToLast();
 				SCInterruption scInterruption = new SCInterruption();
-				scInterruption.setStarted_at(DateUtils.getTimeStamp(new Date()
-						.getTime()));
+//				scInterruption.setStarted_at(DateUtils.getTimeStamp(new Date()
+//						.getTime()));
+				
+				
+				//Log.v("Safecell :"+"timeInMillSecond",""+timeInMillSecond);
+				Date date = new Date(System.currentTimeMillis());
+				SimpleDateFormat simpleDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+				
+				simpleDate.setTimeZone(TimeZone.getTimeZone("UTC"));
+				
+				String dateString = simpleDate.format(date);
+				scInterruption.setStarted_at(dateString);
+		
+				
+				
 				scInterruption
 						.setLatitude(Double.toString(cursor.getDouble(2)));
 				scInterruption

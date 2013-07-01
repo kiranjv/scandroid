@@ -22,9 +22,14 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -73,6 +78,10 @@ public class LoginActivity extends Activity {
 	private String versionName;
 
 	private final String TAG = LoginActivity.class.getSimpleName();
+	private WebView wv;
+	private AlertDialog alertDialogForTermsConditions;
+
+	private static boolean isTermsAcepted = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +92,9 @@ public class LoginActivity extends Activity {
 
 		InitUi();
 		context = LoginActivity.this;
+		if (!isTermsAcepted)
+			dialogforWebview();
+
 		progressDialog = new ProgressDialog(context);
 		mThread = new ProgressThread();
 		mThread1 = new ProgressThread1();
@@ -138,6 +150,76 @@ public class LoginActivity extends Activity {
 
 	}
 
+	void dialogforWebview() {
+
+		AlertDialog.Builder builder;
+
+		Context mContext = LoginActivity.this;
+
+		LayoutInflater inflater = (LayoutInflater) mContext
+				.getSystemService(LAYOUT_INFLATER_SERVICE);
+		View layout = inflater.inflate(R.layout.private_policy_layout,
+				(ViewGroup) findViewById(R.id.layout_root));
+
+		final Activity activity = LoginActivity.this;
+		wv = (WebView) layout.findViewById(R.id.webview);
+
+		wv.getSettings().setJavaScriptEnabled(true);
+		wv.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
+
+		wv.setWebViewClient(new HelloWebViewClient());
+		wv.setWebChromeClient(new WebChromeClient() {
+
+			public void onProgressChanged(WebView view, int newProgress) {
+				activity.setProgress(newProgress * 100);
+
+				if (newProgress == 100) {
+
+				}
+			};
+		});
+
+		wv.setWebViewClient(new WebViewClient() {
+			public void onReceivedError(WebView view, int errorCode,
+					String description, String failingUrl) {
+				// Log.v("errorCode", "errorcode "+errorCode + description);
+				alertDialogForTermsConditions.cancel();
+
+			}
+		});
+		// wv.loadUrl(URLs.REMOTE_URL +
+		// "api/1/site_setting/terms_of_service.html");
+		wv.loadUrl("file:///android_asset/terms_of_service.html");
+		builder = new AlertDialog.Builder(mContext);
+		builder.setView(layout);
+		builder.setTitle("Policy");
+
+		builder.setPositiveButton("Accept",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						isTermsAcepted = true;
+						dialog.cancel();
+					}
+				}).setNegativeButton("Don't Accept",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						isTermsAcepted = false;
+						dialog.cancel();
+						quitDialog("License",
+								"Terms and conditions should accept. ");
+					}
+				});
+		alertDialogForTermsConditions = builder.create();
+		if (progressDialog != null && progressDialog.isShowing()) {
+			progressDialog.dismiss();
+		}
+		try {
+			alertDialogForTermsConditions.show();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -172,20 +254,24 @@ public class LoginActivity extends Activity {
 			 * etPassword.getText().toString().trim();
 			 */
 
-			if (NetWork_Information.isNetworkAvailable(LoginActivity.this)) {
-				progressDialog.setMessage("Loading Please Wait");
+			if (!isTermsAcepted)
+				dialogforWebview();
+			else {
+				if (NetWork_Information.isNetworkAvailable(LoginActivity.this)) {
+					progressDialog.setMessage("Loading Please Wait");
 
-				progressDialog.show();
+					progressDialog.show();
 
-				progressDialog
-						.setCancelable(cancelExisitingProfileProgressDialog);
+					progressDialog
+							.setCancelable(cancelExisitingProfileProgressDialog);
 
-				mThread.start();
-			} else {
+					mThread.start();
+				} else {
 
-				NetWork_Information
-						.noNetworkConnectiondialog(LoginActivity.this);
+					NetWork_Information
+							.noNetworkConnectiondialog(LoginActivity.this);
 
+				}
 			}
 		}
 	};
@@ -285,161 +371,170 @@ public class LoginActivity extends Activity {
 									selectedProfile = profilesJA
 											.getJSONObject(item);
 									// check that profile already logged in
-									boolean is_app_installed = selectedProfile.getBoolean("is_app_installed");
-									Log.v(TAG, "is_app_installed: "+is_app_installed);
-									if(is_app_installed) {
+									boolean is_app_installed = selectedProfile
+											.getBoolean("is_app_installed");
+									Log.v(TAG, "is_app_installed: "
+											+ is_app_installed);
+									if (is_app_installed) {
 										Log.e(TAG, "Blocking login...");
-										Toast.makeText(context, "Profile already in use in another device.", Toast.LENGTH_LONG).show();
-										quitDialog(context, "Profile in use", "Profile already in use in another device.");
-										
-										
-									}
-									else {
-										Log.e(TAG, "Allowing login...");	
-									
-									progressDialog
-											.setMessage("Loading Please Wait");
-
-									progressDialog.show();
-
-									progressDialog
-											.setCancelable(cancelSelectProfile);
-									// setting selected index into preferences
-									new ConfigurePreferences(context)
-											.setProfileIndex(String
-													.valueOf(item));
-									new ConfigurePreferences(context)
-											.setSelectedProfile(selectedProfile
-													.toString());
-									// Checking profile license information
-									// empty or not
-									String manager_id = selectedProfile
-											.getString("manager_id");
-									String start_date = selectedProfile
-											.getString("license_startdate");
-									String subscription = selectedProfile
-											.getString("license_subsription");
-
-									// store details in shared preferences
-									ConfigurePreferences preferences = new ConfigurePreferences(
-											context);
-									preferences.set_ProfileID(selectedProfile
-											.getString("id"));
-									preferences.set_AccountID(selectedProfile
-											.getString("account_id"));
-									preferences.set_ManagerID(manager_id);
-									preferences
-											.set_LicenseStartDate(start_date);
-									preferences
-											.set_LicenseSubscription(subscription);
-
-									// check manager account
-									if (manager_id.equals("0")) {
-										Log.d(TAG, "Manager profile");
-										UIUtils.OkDialog(context,
-												"Cannot login with Manager Account. Please provide a registered device user.");
-										progressDialog.dismiss();
-										return;
-									}
-
-									// Check account is active or inactive
-
-									// validate account activation
-									boolean account_status = validateAccountActive(selectedProfile);
-									if (account_status) {
-										Log.v(TAG, "Account is activated...");
-										TrackingService.AccountActive = true;
-									} else {
-										Log.v(TAG,
-												"Account is not activated yet..");
-										quitDialog(context, "Activation",
-												TAGS.TAG_INACTIVE);
-										return;
-									}
-									// check start date empty
-									if (start_date.isEmpty()
-											|| start_date.equalsIgnoreCase(" ")
-											|| start_date == "null"
-											|| start_date.equals("null")
-											|| subscription.isEmpty()
-											|| subscription
-													.equalsIgnoreCase(" ")
-											|| subscription == "null"
-											|| subscription.equals("null")) {
-										Log.e(TAG, "Profile license null");
-										UIUtils.OkDialog(context,
-												"No profile license information in server .");
-										progressDialog.dismiss();
-										return;
-									}
-
-									// check license start date of profile
-									boolean start_status = TrailCheck
-											.validateStartDate(context,
-													start_date);
-									Log.d(TAG,
-											"start date validation status = "
-													+ start_status);
-									if (start_status) {
-										Log.e(TAG,
-												"Your license not started yet");
-										String startdate = start_date
-												.split("T")[0];
-										quitDialog(
+										Toast.makeText(
 												context,
-												"Licence",
-												"You are authorize to use the application from "
-														+ startdate
-														+ ". Please login on that date");
-										progressDialog.dismiss();
-										return;
-									}
-
-									Log.d(TAG, "License subscription: "
-											+ subscription);
-									// check license expire date of profile
-									boolean expire = TrailCheck
-											.validateExpireOn(context,
-													start_date, subscription);
-									long remain_days = TrailCheck
-											.getRemain_days();
-									if (expire) {
-										String exipredate = TrailCheck.expire_date
-												.split(" ")[0];
-										Log.e(TAG, "Trail expired");
-										quitDialog(
-												context,
-												TrailCheck.title,
-												"You SafeCell license expired on "
-														+ exipredate
-														+ " .Please log on the www.safecellapp.mobi with your userid and password and renew the license.");
-										progressDialog.dismiss();
-										return;
-									}
-									if (remain_days < 30 && !expire) {
-
-										AlertDialog dialog_screen = new AlertDialog.Builder(
-												context)
-												.setMessage(TrailCheck.messsge)
-												.setNeutralButton(
-														"Ok",
-														new DialogInterface.OnClickListener() {
-
-															@Override
-															public void onClick(
-																	DialogInterface dialog,
-																	int which) {
-
-																dialog.cancel();
-																mThread1.start();
-
-															}
-														}).create();
-										dialog_screen.show();
-
+												"Profile already in use in another device.",
+												Toast.LENGTH_LONG).show();
+										quitDialog(context, "Profile in use",
+												"Profile already in use in another device.");
 									} else {
-										mThread1.start();
-									}
+										Log.e(TAG, "Allowing login...");
+
+										progressDialog
+												.setMessage("Loading Please Wait");
+
+										progressDialog.show();
+
+										progressDialog
+												.setCancelable(cancelSelectProfile);
+										// setting selected index into
+										// preferences
+										new ConfigurePreferences(context)
+												.setProfileIndex(String
+														.valueOf(item));
+										new ConfigurePreferences(context)
+												.setSelectedProfile(selectedProfile
+														.toString());
+										// Checking profile license information
+										// empty or not
+										String manager_id = selectedProfile
+												.getString("manager_id");
+										String start_date = selectedProfile
+												.getString("license_startdate");
+										String subscription = selectedProfile
+												.getString("license_subsription");
+
+										// store details in shared preferences
+										ConfigurePreferences preferences = new ConfigurePreferences(
+												context);
+										preferences
+												.set_ProfileID(selectedProfile
+														.getString("id"));
+										preferences.set_AccountID(selectedProfile
+												.getString("account_id"));
+										preferences.set_ManagerID(manager_id);
+										preferences
+												.set_LicenseStartDate(start_date);
+										preferences
+												.set_LicenseSubscription(subscription);
+
+										// check manager account
+										if (manager_id.equals("0")) {
+											Log.d(TAG, "Manager profile");
+											UIUtils.OkDialog(context,
+													"Cannot login with Manager Account. Please provide a registered device user.");
+											progressDialog.dismiss();
+											return;
+										}
+
+										// Check account is active or inactive
+
+										// validate account activation
+										boolean account_status = validateAccountActive(selectedProfile);
+										if (account_status) {
+											Log.v(TAG,
+													"Account is activated...");
+											TrackingService.AccountActive = true;
+										} else {
+											Log.v(TAG,
+													"Account is not activated yet..");
+											quitDialog(context, "Activation",
+													TAGS.TAG_INACTIVE);
+											return;
+										}
+										// check start date empty
+										if (start_date.isEmpty()
+												|| start_date
+														.equalsIgnoreCase(" ")
+												|| start_date == "null"
+												|| start_date.equals("null")
+												|| subscription.isEmpty()
+												|| subscription
+														.equalsIgnoreCase(" ")
+												|| subscription == "null"
+												|| subscription.equals("null")) {
+											Log.e(TAG, "Profile license null");
+											UIUtils.OkDialog(context,
+													"No profile license information in server .");
+											progressDialog.dismiss();
+											return;
+										}
+
+										// check license start date of profile
+										boolean start_status = TrailCheck
+												.validateStartDate(context,
+														start_date);
+										Log.d(TAG,
+												"start date validation status = "
+														+ start_status);
+										if (start_status) {
+											Log.e(TAG,
+													"Your license not started yet");
+											String startdate = start_date
+													.split("T")[0];
+											quitDialog(
+													context,
+													"Licence",
+													"You are authorize to use the application from "
+															+ startdate
+															+ ". Please login on that date");
+											progressDialog.dismiss();
+											return;
+										}
+
+										Log.d(TAG, "License subscription: "
+												+ subscription);
+										// check license expire date of profile
+										boolean expire = TrailCheck
+												.validateExpireOn(context,
+														start_date,
+														subscription);
+										long remain_days = TrailCheck
+												.getRemain_days();
+										if (expire) {
+											String exipredate = TrailCheck.expire_date
+													.split(" ")[0];
+											Log.e(TAG, "Trail expired");
+											quitDialog(
+													context,
+													TrailCheck.title,
+													"You SafeCell license expired on "
+															+ exipredate
+															+ " .Please log on the www.safecellapp.mobi with your userid and password and renew the license.");
+											progressDialog.dismiss();
+											return;
+										}
+										if (remain_days < 30 && !expire) {
+
+											AlertDialog dialog_screen = new AlertDialog.Builder(
+													context)
+													.setMessage(
+															TrailCheck.messsge)
+													.setNeutralButton(
+															"Ok",
+															new DialogInterface.OnClickListener() {
+
+																@Override
+																public void onClick(
+																		DialogInterface dialog,
+																		int which) {
+
+																	dialog.cancel();
+																	mThread1.start();
+
+																}
+															}).create();
+											dialog_screen.show();
+
+										} else {
+											mThread1.start();
+										}
 									}
 								} catch (Exception e) {
 									Log.d(TAG,
@@ -447,7 +542,6 @@ public class LoginActivity extends Activity {
 									e.printStackTrace();
 								}
 
-							
 							} else {
 
 								Log.d(TAG, "No network information available");
@@ -666,6 +760,34 @@ public class LoginActivity extends Activity {
 							}
 						}).show();
 
+	}
+
+	// Dialog dialog;
+	private class HelloWebViewClient extends WebViewClient {
+		@Override
+		public boolean shouldOverrideUrlLoading(WebView view, String url) {
+			view.loadUrl(url);
+			Log.v("Terms URL: ", url);
+			return true;
+		}
+	}
+
+	private void quitDialog(String title, String message) {
+
+		new AlertDialog.Builder(context)
+				.setMessage(message)
+				.setTitle(title)
+				.setNeutralButton("Quit",
+						new DialogInterface.OnClickListener() {
+
+							public void onClick(DialogInterface dialog,
+									int which) {
+
+								dialog.cancel();
+								finish();
+
+							}
+						}).show();
 	}
 
 }

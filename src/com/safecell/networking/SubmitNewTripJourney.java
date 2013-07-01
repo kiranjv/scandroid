@@ -132,6 +132,8 @@ public class SubmitNewTripJourney {
 				context);
 		InteruptionRepository ir = new InteruptionRepository(context);
 		interruptionsJsonArray = ir.getInteruptions();
+		Log.v(TAG, "Interruptions JSON: "+interruptionsJsonArray.toString());
+		logger.debug("Interruptions JSON: "+interruptionsJsonArray.toString());
 		// Log.v("Safecell :"+"Interuption Json",interruptionsJsonArray.toString());
 
 		// interruptionsJsonArray.getJSONObject(index)
@@ -412,14 +414,7 @@ public class SubmitNewTripJourney {
 			// Toast.makeText(context,
 			// "Interruptions Count = "+interruptionsJsonArray.length(),
 			// Toast.LENGTH_LONG).show();
-			jounaryJsonObject.put("tmpwaypoints_attributes", jsonArray);
-			jounaryJsonObject.put("ended_at", endDateTime);
-			jounaryJsonObject.put("started_at", startDateTime);
-			jounaryJsonObject.put("started_utcat", startDateTimeUTC);
-			jounaryJsonObject.put("ended_utcat", endDateTimeUTC);
-			jounaryJsonObject.put("tmpinterruptions_attributes",
-					interruptionsJsonArray);
-
+			
 			TempTripJourneyWayPointsRepository tempWayPointRepo = new TempTripJourneyWayPointsRepository(
 					context);
 			double total_miles = tempWayPointRepo.getTotalDistance();
@@ -428,8 +423,17 @@ public class SubmitNewTripJourney {
 					+ total_miles;
 			new ConfigurePreferences(context).setPrevSyncMiles((float) tdist);
 
+			
+			jounaryJsonObject.put("tmpwaypoints_attributes", jsonArray);
+			
+			jounaryJsonObject.put("ended_at", endDateTime);
+			jounaryJsonObject.put("started_at", startDateTime);
+			jounaryJsonObject.put("started_utcat", startDateTimeUTC);
+			jounaryJsonObject.put("ended_utcat", endDateTimeUTC);
 			jounaryJsonObject.put("miles_driven", total_miles);
 			jounaryJsonObject.put("total_points", "null");
+			jounaryJsonObject.put("tmpinterruptions_attributes",
+					interruptionsJsonArray);
 
 			Log.v(TAG, "BootReceiver.SHUTDOWNSAVE: "
 					+ BootReceiver.SHUTDOWNSAVE + " Total miles: " + tdist);

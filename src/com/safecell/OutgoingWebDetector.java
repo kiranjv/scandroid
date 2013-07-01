@@ -69,14 +69,12 @@ public class OutgoingWebDetector extends ContentObserver {
 	@Override
 	public void onChange(boolean selfChange) {
 		super.onChange(selfChange);
-		Log.d(TAG, "Web detected ");
-		if (!TAGS.disableWeb) {
-			if (!new ConfigurePreferences(mContext).isTripAbandon()) {
-				Toast.makeText(mContext, "WEB interruption", Toast.LENGTH_LONG)
-						.show();
-				Util.saveInterruption(mContext, SCInterruption.WEB);
-			}
-		}
+		/*
+		 * Log.d(TAG, "Web detected "); if (!TAGS.disableWeb) { if (!new
+		 * ConfigurePreferences(mContext).isTripAbandon()) {
+		 * Toast.makeText(mContext, "WEB interruption", Toast.LENGTH_LONG)
+		 * .show(); Util.saveInterruption(mContext, SCInterruption.WEB); } }
+		 */
 	}
 
 }

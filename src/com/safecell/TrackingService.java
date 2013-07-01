@@ -48,6 +48,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.SumPathEffect;
+import android.location.Criteria;
 import android.location.GpsStatus.NmeaListener;
 import android.location.Location;
 import android.location.LocationListener;
@@ -127,6 +128,9 @@ public class TrackingService extends Service implements LocationListener,
 	private static Handler idleMonitorTimerHandler = null;
 	private static Runnable idleMonitorTimerRunner = null;
 
+	private static Timer weekOfDayMonitorTimer = null;
+	private static TimerTask weekOfDayMonitorTimerTask = null;
+
 	private static Handler idlePointsTimerHandler = null;
 	private static Runnable idlePointsTimerRunner = null;
 	private static int IDLE_POINTS_CLEAR_TIME = 2; // mints
@@ -186,7 +190,13 @@ public class TrackingService extends Service implements LocationListener,
 	IBinder mBinder = new LocalBinder();
 	private Intent BATTERYintent = null;
 	private boolean isTripStarted;
+
+	private boolean isTripAbandoned = false;
+
+	private boolean isWeekOfTimerSplashShow = false;
 	public static boolean NO_INTERNET_SAVE = false;
+
+	private static boolean isLockActivated = false;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -246,6 +256,9 @@ public class TrackingService extends Service implements LocationListener,
 			}
 
 		}
+
+		// put logcat moniter service. The service will creates new log file
+		// every time it started.
 
 		configureLocationManager();
 
@@ -401,8 +414,8 @@ public class TrackingService extends Service implements LocationListener,
 		/** change unique ID for trip saving **/
 		if (HomeScreenActivity.genereateTripUniqueID().equalsIgnoreCase("")) {
 
-			//String timestamp = String.valueOf(System.currentTimeMillis());
-			//String key = SCProfile.newUniqueDeviceKey();
+			// String timestamp = String.valueOf(System.currentTimeMillis());
+			// String key = SCProfile.newUniqueDeviceKey();
 			// String substr = uniqueTripId.substring(timestamp.length(),
 			// uniqueTripId.length());
 			// String unique_timeTripID = timestamp + substr;
@@ -412,11 +425,33 @@ public class TrackingService extends Service implements LocationListener,
 		new TempTripJourneyWayPointsRepository(context).deleteTripWaypoints();
 		new InteruptionRepository(context).deleteInteruptions();
 
-		SharedPreferences.Editor editor = sharedPreferences.edit();
+		SharedPreferences.Editor editor = getSharedPreferences("TRIP",
+				MODE_WORLD_READABLE).edit();
 		editor.putBoolean("isTripStarted", true);
 		editor.commit();
 
 		TrackingService.isTripRunning = true;
+
+		// activate lock if trip not abandon
+
+		if (!new ConfigurePreferences(context).isTripAbandon()) {
+
+			// activate locks
+			Log.v(TAG, "phone locks activated...");
+			logger.debug("phone locks activated...");
+			activatePhoneLocks();
+
+		} else {
+			TrackingService.isLockActivated = false;
+			Log.v(TAG, "Abandon trip no locks activated...");
+			logger.debug("Abandon trip no locks activated...");
+		}
+
+		Log.v("Safecell", "**autoStartTrip");
+
+	}
+
+	private void activatePhoneLocks() {
 
 		// start the observer based on configuration
 		if (mSmsDetector != null) {
@@ -451,11 +486,11 @@ public class TrackingService extends Service implements LocationListener,
 			Log.v(TAG, "Disabling mobile network");
 			Util.setMobileDataEnabled(context, false);
 		}
-		Log.v("Safecell", "**autoStartTrip");
 
 		// Lock the keypad buttons
 		LockKeyPadService.activateKeyPadLock(context, true);
 		Log.v(TAG, "Keypad lock service started...");
+		TrackingService.isLockActivated = true;
 
 	}
 
@@ -505,7 +540,41 @@ public class TrackingService extends Service implements LocationListener,
 								.currentTimeMillis());
 
 				if (firstWayPointTimeDiffernce < TAGS.FALSE_TRIP_TIME_THRESHOLD) {
+
+					// check day of week
+					if (checkDayOfWeek()) {
+
+						if (!isTripTimeAllowed()) {
+
+							Log.e(TAG, "WeekOfDay trip not allowed");
+
+							// Disable SAVE TRIP Flag.
+							new ConfigurePreferences(context)
+									.setSAVETRIP(false);
+							Log.v(TAG, "SAVE TRIP Disabled ");
+							Toast.makeText(context, "SAVE TRIP Disabled",
+									Toast.LENGTH_LONG).show();
+
+							// Set abandon flag in preferences
+							new ConfigurePreferences(context)
+									.isTripAbandon(true);
+							Log.v(TAG, "Trip is Abandoned");
+							Toast.makeText(context, "Trip is Abandoned",
+									Toast.LENGTH_LONG).show();
+							TrackingService.ABANDONFLAG = true;
+
+							// create a week of day timer
+
+							/* Create timer to monitor device idle conditions. */
+							isWeekOfTimerSplashShow = false;
+							setWeekOfDaySplashTimer();
+
+						}
+
+					}
+					// normal day
 					autoStartTrip();
+
 					Log.v(TAG, "Auto Trip Started. Time Difference: "
 							+ firstWayPointTimeDiffernce + " mins");
 					logger.info("Auto Trip Started. Time Difference: "
@@ -608,6 +677,41 @@ public class TrackingService extends Service implements LocationListener,
 		Log.d("IdleTimer:",
 				"Idle moniter timer created at: "
 						+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+	}
+
+	private void setWeekOfDaySplashTimer() {
+		Log.d(TAG, "Creating week of day moniter timer..");
+		logger.debug("Creating week of day moniter timer..");
+
+		weekOfDayMonitorTimerTask = new TimerTask() {
+
+			@Override
+			public void run() {
+				weekOfDayTimerFireMethod();
+			}
+		};
+
+		weekOfDayMonitorTimer = new Timer();
+		long interval = Util.minitToMilliSeconds(TAGS.recheckInterval);
+		weekOfDayMonitorTimer.scheduleAtFixedRate(weekOfDayMonitorTimerTask,
+				interval, interval);
+
+		Log.d("IdleTimer:",
+				"Idle moniter timer created at: "
+						+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+	}
+
+	private void clearWeekOfDaySplashTimer() {
+		if (weekOfDayMonitorTimer != null) {
+			weekOfDayMonitorTimer.cancel();
+
+			Log.d(TAG,
+					"Week of day Timer cleared at: "
+							+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+			logger.debug("Week of day Timer cleared at: "
+					+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+		}
+
 	}
 
 	private void setPointsIdleTimer() {
@@ -720,11 +824,14 @@ public class TrackingService extends Service implements LocationListener,
 
 		int TotalDistatnce = (int) tempWayPointRepo.getTotalDistance();
 
-		Log.v(TAG, "Trip Total distance traveled: " + TotalDistatnce);
+		Log.v(TAG, "Trip distance traveled: " + TotalDistatnce);
 
 		double current_distance = TotalDistatnce
 				+ new ConfigurePreferences(context).getPrevSyncMiles(); // TAGS.PREV_SYNC_MILES;
 
+		Log.e(TAG, "Trip Current Final Distance: " + current_distance);
+		logger.debug("Trip distance: " + TotalDistatnce
+				+ " Trip current final distance: " + current_distance);
 		if (BootReceiver.SHUTDOWNSAVE
 				|| (!(current_distance < 1) && ConfigurationHandler
 						.getInstance().getConfiguration().isLogWayPoints())) {
@@ -1040,6 +1147,20 @@ public class TrackingService extends Service implements LocationListener,
 		logger.debug("Longitude  " + location.getLongitude() + " Latitude "
 				+ location.getLatitude() + " Time: "
 				+ DateUtils.getTimeStamp(System.currentTimeMillis()));
+		float accuracy = location.getAccuracy();
+
+		Log.e(TAG, "Accuracy: " + accuracy + " Speed: " + location.getSpeed());
+		logger.debug("Accuracy: " + accuracy + " Speed: " + location.getSpeed());
+
+		
+		// Ignore waypoints with accuracy more than 20
+		if(accuracy > 20) {
+			Log.d(TAG, "Igonoring way-point accuracy is more than 20..");
+			logger.debug("Igonoring way-point accuracy is more than 20..");
+			return;
+		}
+		
+		
 		// Ignore way point Emergency call in active and trip not started
 		if (new ConfigurePreferences(context).getEmergencyTRIPSAVE()
 				&& !new ConfigurePreferences(context).getTripStrated()) {
@@ -1058,8 +1179,11 @@ public class TrackingService extends Service implements LocationListener,
 			if (ABANDONFLAG) {
 				Log.v(TAG, "Trip Abondon Activated. ");
 				// foregroundService("Trip is Abondoned.");
-				makeTripAbandon(context);
+				if (isLockActivated)
+					makeTripAbandon(context);
+				isLockActivated = false;
 				ABANDONFLAG = false;
+
 			}
 
 		}
@@ -1290,6 +1414,9 @@ public class TrackingService extends Service implements LocationListener,
 		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
 				LOCATION_UPDATE_TIME_INTERVAL,
 				LOCATION_UPDATE_DISTANCE_INTERVAL, context);
+
+		// locationManager.requestLocationUpdates(LOCATION_UPDATE_TIME_INTERVAL,
+		// LOCATION_UPDATE_DISTANCE_INTERVAL, criteria, context, null);
 		SELECTED_PROVIDER = LocationManager.GPS_PROVIDER;
 		// Log.v("Safecell", "SELECTED_PROVIDER : " + SELECTED_PROVIDER);
 
@@ -1325,6 +1452,26 @@ public class TrackingService extends Service implements LocationListener,
 		// criteria.setPowerRequirement(Criteria.NO_REQUIREMENT);
 		// criteria.setCostAllowed(true);
 		// criteria.setAccuracy(Criteria.ACCURACY_FINE);
+
+		// set accuracy details
+		// All your normal criteria setup
+		Criteria criteria = new Criteria();
+		// Use FINE or COARSE (or NO_REQUIREMENT) here
+		criteria.setAccuracy(Criteria.ACCURACY_FINE);
+		criteria.setPowerRequirement(Criteria.POWER_LOW);
+		criteria.setAltitudeRequired(true);
+		criteria.setSpeedRequired(true);
+		criteria.setCostAllowed(true);
+		criteria.setBearingRequired(true);
+
+		// API level 9 and up
+		criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+		criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
+		criteria.setBearingAccuracy(Criteria.ACCURACY_LOW);
+		criteria.setSpeedAccuracy(Criteria.ACCURACY_HIGH);
+
+		// String bestProvider = locationManager.getBestProvider(criteria,
+		// true);
 
 		selectBestLocationProvider();
 	}
@@ -1424,11 +1571,29 @@ public class TrackingService extends Service implements LocationListener,
 		// saveTrip(context);
 		// }
 
+		logger.debug("Current provider: " + SELECTED_PROVIDER);
+
+		// start trip avg speed more else clear waypoints...
+
 		if (avarageSpeed >= TRIP_CUT_OFF && isTripStarted == false) {
 			// start the service again
 			Toast.makeText(context, " Starting trip. " + current_locations,
 					Toast.LENGTH_SHORT).show();
-			autoStartTrip();
+			if (!TAGS.IS_EMERGENCY_HALT_ACTIVATED)
+				//autoStartTrip();
+			checkDayAndAutoTripStart();
+
+			else {
+
+				// clear waypoints on emergency halt activated...
+				new TempTripJourneyWayPointsRepository(TrackingService.this)
+						.deleteTripWaypoints();
+				new InteruptionRepository(context).deleteInteruptions();
+			}
+		} else {
+			// clear waypoints only
+			//new TempTripJourneyWayPointsRepository(TrackingService.this)
+			//		.deleteTripWaypoints();
 		}
 
 		/*
@@ -1506,8 +1671,10 @@ public class TrackingService extends Service implements LocationListener,
 			Log.d("SafeCellDebug", "trackingScreenActivity: "
 					+ trackingScreenActivity + " ,isTripStarted:"
 					+ isTripStarted);
-			if (!new ConfigurePreferences(context).isTripAbandon()
-					&& TAGS.SHOW_SPLASH && trackingScreenActivity == null) {
+			if (isWeekOfTimerSplashShow
+					|| (!new ConfigurePreferences(context).isTripAbandon()
+							&& TAGS.SHOW_SPLASH && trackingScreenActivity == null)) {
+				isWeekOfTimerSplashShow = false;
 				Log.v(TAG, "Starting tracking screen activity");
 				Intent mIntent = new Intent(TrackingService.this,
 						TrackingScreenActivity.class);
@@ -1812,8 +1979,9 @@ public class TrackingService extends Service implements LocationListener,
 
 				if (!result) {
 					Log.d(TAG, "Save failled save result status: " + result);
-					tempTripJourneyWayPointsRepository.deleteTripWaypoints();
-					ir.deleteInteruptions();
+					new TempTripJourneyWayPointsRepository(context)
+							.deleteTripWaypoints();
+					new InteruptionRepository(context).deleteInteruptions();
 					// try {
 					//
 					// if (trackingScreenActivity != null) {
@@ -1872,8 +2040,6 @@ public class TrackingService extends Service implements LocationListener,
 
 			}
 
-			new ConfigurePreferences(context).isTripAbandon(false);
-			new ConfigurePreferences(context).setEmergencyTripSave(false);
 			// un mute silent mode.
 			AudioManager aManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 			aManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
@@ -1938,6 +2104,10 @@ public class TrackingService extends Service implements LocationListener,
 	 * 
 	 */
 	private void startTrip() {
+
+		new ConfigurePreferences(context).isTripAbandon(false);
+		new ConfigurePreferences(context).setEmergencyTripSave(false);
+
 		/** change unique ID for trip saving **/
 		configureLocationManager();
 		HomeScreenActivity.editGenereateTripUniqueID("");
@@ -2190,6 +2360,15 @@ public class TrackingService extends Service implements LocationListener,
 			TAGS.tripStopTime = ConfigurationHandler.getInstance()
 					.getConfiguration().getTripStopTime();
 
+			TAGS.startTime = ConfigurationHandler.getInstance()
+					.getConfiguration().getStartTime();
+			TAGS.endTime = ConfigurationHandler.getInstance()
+					.getConfiguration().getEndTime();
+			TAGS.isActive = ConfigurationHandler.getInstance()
+					.getConfiguration().isActive();
+			TAGS.dayOfWeek = ConfigurationHandler.getInstance()
+					.getConfiguration().getDayOfWeek();
+
 			Log.d(TAG, "AUTO_SAVE_DELAY_MINUTE:" + AUTO_SAVE_DELAY_MINUTE);
 			Log.d(TAG, "TRIP_CUT_OFF: " + TRIP_CUT_OFF);
 			Log.d(TAG, "CONTROLLER NUMBER:" + TAGS.CONTORL_NUMBER);
@@ -2200,6 +2379,11 @@ public class TrackingService extends Service implements LocationListener,
 			Log.d(TAG, "isWEB Disable:" + TAGS.disableWeb);
 			Log.d(TAG, "SHOW SPLASH:" + TAGS.SHOW_SPLASH);
 			Log.d(TAG, "Keypad Lock: " + TAGS.keypadLock);
+			Log.d(TAG, "startTime: " + TAGS.startTime);
+			Log.d(TAG, "endTime: " + TAGS.endTime);
+			Log.d(TAG, "isActive: " + TAGS.isActive);
+			Log.d(TAG, "dayOfWeek: " + TAGS.dayOfWeek);
+
 			return null;
 
 		}
@@ -2353,6 +2537,191 @@ public class TrackingService extends Service implements LocationListener,
 			Log.v(TAG, "Removing sms block");
 			BlockSMSService.deactivateSMSBlock();
 		}
+	}
+
+	private boolean checkDayOfWeek() {
+		String todayDayOfWeek = DateUtils.getTodayDayOfWeek();
+		if (todayDayOfWeek.equalsIgnoreCase(TAGS.dayOfWeek))
+			return true;
+		return false;
+	}
+
+	private boolean isTripTimeAllowed() {
+		if (TAGS.isActive && DateUtils.isTimeElapsed(TAGS.startTime))
+			return true;
+		return false;
+
+	}
+
+	private void weekOfDayTimerFireMethod() {
+		Log.v(TAG, "weekOfDayTimerFireMethod");
+		logger.debug("weekOfDayTimerFireMethod activated...");
+
+		// reset all dayofweek settings
+		if (isTripTimeAllowed()) {
+
+			Log.e(TAG, "WeekOfDay trip allowed");
+
+			// Disable SAVE TRIP Flag.
+			new ConfigurePreferences(context).setSAVETRIP(true);
+			Log.v(TAG, "SAVE TRIP activated ");
+			logger.debug("week of day resetting save trip flag");
+			// Toast.makeText(context, "SAVE TRIP Activated", Toast.LENGTH_LONG)
+			// .show();
+
+			// Set abandon flag in preferences
+			new ConfigurePreferences(context).isTripAbandon(false);
+			Log.v(TAG, "Trip Abandoned is resetted");
+			logger.debug("Trip Abandoned is resetted");
+			// Toast.makeText(context, "Trip Abandoned is resetted",
+			// Toast.LENGTH_LONG).show();
+			isWeekOfTimerSplashShow = true;
+			clearWeekOfDaySplashTimer();
+		}
+
+	}
+
+/*	private void checksBeforeAutoTripStart_old() {
+		// // put the time difference check.
+		TempTripJourneyWayPointsRepository waypointRepo = new TempTripJourneyWayPointsRepository(
+				context);
+		double firstWayPointTimeDiffernce = waypointRepo
+				.getFirstWayPointTimeDiffernce(System.currentTimeMillis());
+
+		// TAGS.PREV_SYNC_MILES = 0;
+		new ConfigurePreferences(context).setPrevSyncMiles(0);
+
+		if (firstWayPointTimeDiffernce < TAGS.FALSE_TRIP_TIME_THRESHOLD) {
+
+			// check day of week
+			if (checkDayOfWeek()) {
+
+				if (!isTripTimeAllowed()) {
+
+					Log.e(TAG, "WeekOfDay trip not allowed");
+
+					// Disable SAVE TRIP Flag.
+					new ConfigurePreferences(context).setSAVETRIP(false);
+					Log.v(TAG, "SAVE TRIP Disabled ");
+					Toast.makeText(context, "SAVE TRIP Disabled",
+							Toast.LENGTH_LONG).show();
+
+					// Set abandon flag in preferences
+					new ConfigurePreferences(context).isTripAbandon(true);
+					Log.v(TAG, "Trip is Abandoned");
+					Toast.makeText(context, "Trip is Abandoned",
+							Toast.LENGTH_LONG).show();
+					TrackingService.ABANDONFLAG = true;
+
+					// create a week of day timer
+
+					 Create timer to monitor device idle conditions. 
+					isWeekOfTimerSplashShow = false;
+					setWeekOfDaySplashTimer();
+
+				}
+
+			}
+			// normal day
+			autoStartTrip();
+
+			Log.v(TAG, "Auto Trip Started. Time Difference: "
+					+ firstWayPointTimeDiffernce + " mins");
+			logger.info("Auto Trip Started. Time Difference: "
+					+ firstWayPointTimeDiffernce + " mins");
+		} else {
+			Log.v(TAG, "FALSE TRIP IDENTIFIED. Time Difference: "
+					+ firstWayPointTimeDiffernce + " mins");
+			logger.info("FALSE TRIP IDENTIFIED. Time Difference: "
+					+ firstWayPointTimeDiffernce + " mins");
+
+			// delete the waypoints
+			waypointRepo.deleteTripWaypoints();
+
+			// start the service again
+			startTrip();
+		}
+	}
+*/
+	
+	
+	private void checkDayAndAutoTripStart() {
+		// // put the time difference check.
+		TempTripJourneyWayPointsRepository waypointRepo = new TempTripJourneyWayPointsRepository(
+				context);
+		double firstWayPointTimeDiffernce = waypointRepo
+				.getFirstWayPointTimeDiffernce(System.currentTimeMillis());
+
+		
+		new ConfigurePreferences(context).setPrevSyncMiles(0);
+
+		if (firstWayPointTimeDiffernce < TAGS.FALSE_TRIP_TIME_THRESHOLD) {
+
+			// check day of week
+			// if (checkDayOfWeek()) {
+			//
+			// if (!isTripTimeAllowed()) {
+			//
+			// Log.e(TAG, "WeekOfDay trip not allowed");
+			//
+			// // Disable SAVE TRIP Flag.
+			// new ConfigurePreferences(context).setSAVETRIP(false);
+			// Log.v(TAG, "SAVE TRIP Disabled ");
+			// Toast.makeText(context, "SAVE TRIP Disabled",
+			// Toast.LENGTH_LONG).show();
+			//
+			// // Set abandon flag in preferences
+			// new ConfigurePreferences(context).isTripAbandon(true);
+			// Log.v(TAG, "Trip is Abandoned");
+			// Toast.makeText(context, "Trip is Abandoned",
+			// Toast.LENGTH_LONG).show();
+			// TrackingService.ABANDONFLAG = true;
+			//
+			// // create a week of day timer
+			//
+			// /* Create timer to monitor device idle conditions. */
+			// isWeekOfTimerSplashShow = false;
+			// setWeekOfDaySplashTimer();
+			//
+			// }
+			//
+			// } else {
+			// normal day
+			
+			autoStartTrip();
+			
+
+			Log.v(TAG, "Auto Trip Started. Time Difference: "
+					+ firstWayPointTimeDiffernce + " mins");
+			logger.info("Auto Trip Started. Time Difference: "
+					+ firstWayPointTimeDiffernce + " mins");
+			// }
+		} else {
+			Log.v(TAG, "FALSE TRIP IDENTIFIED. Time Difference: "
+					+ firstWayPointTimeDiffernce + " mins");
+			logger.info("FALSE TRIP IDENTIFIED. Time Difference: "
+					+ firstWayPointTimeDiffernce + " mins");
+
+			// delete the waypoints
+			waypointRepo.deleteTripWaypoints();
+
+			// start the service again
+			startTrip();
+		}
+	}
+
+	private void logicToNewRequirement() {
+		/*
+		 * if(dayofweek) {
+		 * 
+		 * if(checkTime()) { // trip allowed if(statusActive) { //start normal
+		 * trip } else { // start the abandon trip } } else { // start the timer
+		 * with interval time and recall same method..
+		 * 
+		 * }
+		 * 
+		 * } else { // normal day case. start trip normally }
+		 */
 	}
 
 }

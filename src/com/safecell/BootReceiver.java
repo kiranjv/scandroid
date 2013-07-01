@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.safecell.networking.NetWork_Information;
 import com.safecell.utilities.ConfigurePreferences;
 
 import android.content.BroadcastReceiver;
@@ -42,8 +43,20 @@ public class BootReceiver extends BroadcastReceiver {
 				SHUTDOWNSAVE = true;
 			}
 
+			
 			activateNetwork(context, true);
 
+			int counter = 0;
+			while(!NetWork_Information.isNetworkAvailable(context)) {
+				if(counter == 5)break; 
+				Thread.sleep(2000);
+				counter++;
+				
+			}
+			
+			// again activate the network
+			activateNetwork(context, true);
+			
 			logger.debug("SHUTDOWN Flag: "+SHUTDOWNSAVE);
 			Intent myStarterIntent = new Intent(context,
 					SplashScreenActivity.class);
